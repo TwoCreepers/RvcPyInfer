@@ -1,0 +1,2 @@
+class InferWarn(Warning):
+    pass

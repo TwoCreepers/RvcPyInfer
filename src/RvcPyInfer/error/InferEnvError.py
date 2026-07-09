@@ -1,0 +1,2 @@
+class InferEnvError(Exception):
+    pass
