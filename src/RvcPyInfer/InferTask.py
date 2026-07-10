@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 
 from .type_alist import FileLike, Audio, AudioLike, F0ExtractAlgorithm, F0ExtractAlgorithmList
 from .f0_utils import build_f0extract_func, apply_rise_tone, f0_to_mel, normalized_mel
-from .audio.audio_utils import split_by_silence, split_by_max_len_with_overlap, crossfade
+from .audio.audio_utils import split_by_silence, split_by_max_len_with_overlap, crossfade, reSR, rms_frame_match
 
 if TYPE_CHECKING:
     from .RvcContext import RvcContext
@@ -15,17 +15,34 @@ if TYPE_CHECKING:
 class InferTask:
     audios: List[Audio]
     def __init__(self, 
-                 context: "RvcContext",
-                 vec_model: Path,
-                 gen_model: Tuple[Path, int],
-                 *audios: AudioLike,
-                 f0extract_algorithm: F0ExtractAlgorithm,
-                 f0_up_semitone: float = 0,
-                 f0_min: float = 50,
-                 f0_max: float = 1100,
-                 slice_max_len = 30,
-                 slice_overlap_len = 5,
-                 ) -> None:
+                # -- 必填 --
+                context: "RvcContext",
+                vec_model: Path,
+                gen_model: Tuple[Path, int],
+                *audios: AudioLike,
+
+                # -- f0 提取 --
+                f0extract_algorithm: F0ExtractAlgorithm,
+                f0_up_semitone: float = 0,
+                f0_min: float = 50,
+                f0_max: float = 1100,
+
+                # -- 强制切片与交叉淡化 --
+                slice_max_len: int = 30,
+                slice_overlap_len: int = 5,
+
+                # -- 静音切片 --
+                silence_frame_len: int = 20,
+                silence_hop_len: int = 10,
+                silence_thresh_db: float = -40,
+                silence_min_silence_duration_ms: float = 800.0,
+                silence_max_transition_ms: float = 100.0,
+
+                # -- RMS 包络匹配 --
+                rms_match_frame_len: int = 20,
+                rms_match_hop_len: int = 10,
+                rms_match_mix: float = 1.0, # 一般不用改
+                ) -> None:
         self.context = context
         self.vec = vec_model
         self.gen = gen_model
@@ -36,6 +53,14 @@ class InferTask:
         self.f0_max = f0_max
         self.slice_max_len = slice_max_len
         self.slice_overlap_len = slice_overlap_len
+        self.silence_frame_len = silence_frame_len
+        self.silence_hop_len = silence_hop_len
+        self.silence_thresh_db = silence_thresh_db
+        self.silence_min_silence_duration_ms = silence_min_silence_duration_ms
+        self.silence_max_transition_ms = silence_max_transition_ms
+        self.rms_match_frame_len = rms_match_frame_len
+        self.rms_match_hop_len = rms_match_hop_len
+        self.rms_match_mix = rms_match_mix
 
     def read(self) -> None:
         self.audios = []
@@ -53,7 +78,7 @@ class InferTask:
                 self.audios.append((data, sr))
         del self.audio_likes
 
-    def chunk_infer(self, audio: Audio, f0extract_func: Callable[[Audio, int], NDArray[np.float32]], sid: int = 0, seed: int | None = 1234) -> Audio:
+    def sub_chunk_infer(self, audio: Audio, f0extract_func: Callable[[Audio, int], NDArray[np.float32]], sid: int = 0, seed: int | None = 1234) -> Audio:
         model = self.context._vec_pool.get(self.vec)
         hubert = model.infer(audio)
 
@@ -86,24 +111,50 @@ class InferTask:
                 np.pad(res_d, [0, pad_len], mode="constant"),
                 res_sr
             )
+    
+    def chunk_infer(self, audio: Audio, f0extract_func: Callable[[Audio, int], NDArray[np.float32]], sid: int = 0, seed: int | None = 1234) -> Audio:
+        splited = split_by_max_len_with_overlap( # 就算不足一个切片长也不会报错哒
+            audio,
+            max_len=self.slice_max_len,
+            overlap_len=self.slice_overlap_len
+            )
+        del audio # 节约点内存
+        def handle(c):
+            return self.sub_chunk_infer(c, f0extract_func, sid, seed)
+        infer = [handle(i) for i in splited]
+        res = crossfade(
+            infer,
+            overlap_len=self.slice_overlap_len
+            )
+        return res
 
     def gen_infer(self, callback: Callable[[int, Audio], None], sid: int = 0, seed: int | None = 1234) -> None:
+        assert self.f0extract_algorithm in F0ExtractAlgorithmList, f"{self.f0extract_algorithm} 不是受支持的算法"
         func = build_f0extract_func(self.f0extract_algorithm, self.f0_min, self.f0_max) # pyright: ignore[reportArgumentType]
         for i, audio in enumerate(self.audios):
-            splited = split_by_max_len_with_overlap(
+            splited = split_by_silence(
                 audio,
-                max_len=self.slice_max_len,
-                overlap_len=self.slice_overlap_len
-                )
-            del audio # 节约点内存
-            def handle(c):
-                return self.chunk_infer(c, func, sid, seed)
-            infer = [handle(i) for i in splited]
-            infer = list(infer)
-            res = crossfade(
-                infer,
-                overlap_len=self.slice_overlap_len
-                )
+                frame_len=self.silence_frame_len,
+                hop_len=self.silence_hop_len,
+                silence_thresh_db=self.silence_thresh_db,
+                min_silence_duration_ms=self.silence_min_silence_duration_ms,
+                max_transition_ms=self.silence_max_transition_ms
+            )
+            chunks: List[Audio] = []
+            for chunk, is_sil in splited:
+                if is_sil:
+                    chunks.append(reSR(chunk, target_sr=self.gen[1])) # 内部判断相等会直接返回
+                else:
+                    chunks.append(self.chunk_infer(chunk, func, sid, seed))
+            datas = [data for data, sr in chunks]
+            res = (np.concatenate(datas), self.gen[1])
+            res = rms_frame_match(
+                source=res,
+                target=reSR(audio, target_sr=res[1]),
+                frame_len=self.rms_match_frame_len,
+                hop_len=self.rms_match_hop_len,
+                mix=self.rms_match_mix
+            )
             callback(i, res)
                 
     def run(self, sid: int = 0, seed: int | None = 1234) -> List[Audio]:
@@ -133,4 +184,15 @@ class InferTask:
                             format=format)
         self.gen_infer(
             save, sid, seed
+        )
+
+    def run_and_callback(self, 
+                        callback: Callable[[int, Audio], None],
+                        sid: int = 0, 
+                        seed: int | None = 1234) -> None:
+        self.read()
+        self.gen_infer(
+            callback=callback,
+            sid=sid,
+            seed=seed
         )

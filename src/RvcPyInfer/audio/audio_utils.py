@@ -48,6 +48,84 @@ def frame_rms(audio: Audio, frame_len = 20, hop_len = 10) -> NDArray[np.float32]
     
     return rms_values
 
+def rms_frame_match(source: Audio,
+                    target: Audio,
+                    frame_len: int = 20,
+                    hop_len: int = 10,
+                    mix: float = 1.0,
+                    eps: float = 1e-8) -> Audio:
+    """
+    将 source 的逐帧 RMS 包络匹配到 target。
+
+    参数:
+        source:    源音频（将被增益调整）
+        target:    目标音频（提取 RMS 包络的参考）
+        frame_len: 帧长度(ms)
+        hop_len:   帧移(ms)
+        mix:       匹配系数，0.0=直接输出源音频，1.0=完全匹配目标RMS
+        eps:       防除零
+
+    返回:
+        Audio: RMS 匹配后的音频
+    """
+    def _smooth_gain[T: np.floating](gain: NDArray[T], smooth_window: int = 15) -> NDArray[T]:
+        """边缘延伸 padding 后卷积，常数增益卷积后仍为常数"""
+        if smooth_window <= 1 or len(gain) <= 1:
+            return gain
+        kernel = np.ones(smooth_window) / smooth_window
+        pad = smooth_window // 2
+        padded = np.concatenate([
+            np.full(pad, gain[0]),
+            gain,
+            np.full(pad, gain[-1])
+        ])
+        return np.convolve(padded, kernel, mode='valid').astype(gain.dtype)
+
+    src_data, src_sr = source
+    tgt_data, tgt_sr = target
+
+    assert src_sr == tgt_sr, "采样率必须一致"
+
+    N = len(src_data)
+
+    # ---- 1. 逐帧 RMS ----
+    src_rms = frame_rms(source, frame_len, hop_len)
+    tgt_rms = frame_rms(target, frame_len, hop_len)
+    assert len(src_rms) == len(tgt_rms), "帧数必须一致"
+
+    # ---- 2. 逐帧增益 + 匹配系数混合 ----
+    gain = tgt_rms / (src_rms + eps)
+    gain = 1.0 + mix * (gain - 1.0)
+
+    # ---- 3. 增益曲线平滑（边缘延伸 padding，无边界失真）----
+    gain = _smooth_gain(gain)
+
+    # ---- 4. 帧参数 ----
+    frame_size = int(round(frame_len * src_sr / 1000))
+    hop_size = int(round(hop_len * src_sr / 1000))
+    n_frames = len(gain)
+
+    # ---- 5. 逐帧增益 → 逐样本增益（overlap-add 归一化）----
+    sample_gain = np.zeros(N, dtype=np.float64)
+    norm = np.zeros(N, dtype=np.float64)
+    for i in range(n_frames):
+        start = i * hop_size
+        end = min(start + frame_size, N)
+        sample_gain[start:end] += gain[i]
+        norm[start:end] += 1.0
+    norm[norm == 0] = 1.0
+    sample_gain /= norm
+
+    # ---- 6. 尾部 ----
+    if n_frames > 0:
+        last_end = (n_frames - 1) * hop_size + frame_size
+        if last_end < N:
+            sample_gain[last_end:] = gain[-1]
+
+    # ---- 7. 应用增益 ----
+    output = src_data * sample_gain
+    return (output.astype(np.float32), src_sr)
+
 def rms_to_db[T: np.floating](rms_values: NDArray[T], ref: float = 1.0) -> NDArray[T]:
     """
     将RMS值转换为dB

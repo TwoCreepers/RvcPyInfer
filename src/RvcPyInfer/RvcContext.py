@@ -30,17 +30,34 @@ class RvcContext:
         self._gen_pool.clear()
 
     def build_task(self, 
-                   vec_model: PathLike, 
-                   gen_model: PathLike, 
-                   gen_model_sr: int,
-                   *audios: AudioLike,
-                   f0extract_algorithm: F0ExtractAlgorithm = "dio",
-                   f0_up_semitone: float = 0,
-                   f0_min: float = 50,
-                   f0_max: float = 1100,
-                   slice_max_len = 30,
-                   slice_overlap_len = 5,
-                   ) -> "InferTask":
+                # -- 必填 --
+                vec_model: PathLike, 
+                gen_model: PathLike, 
+                gen_model_sr: int,
+                *audios: AudioLike,
+
+                # -- f0 提取 --
+                f0extract_algorithm: F0ExtractAlgorithm = "dio",
+                f0_up_semitone: float = 0,
+                f0_min: float = 50,
+                f0_max: float = 1100,
+
+                # -- 强制切片与交叉淡化 --
+                slice_max_len: int = 30,
+                slice_overlap_len: int = 5,
+
+                # -- 静音切片 --
+                silence_frame_len: int = 20,
+                silence_hop_len: int = 10,
+                silence_thresh_db: float = -40,
+                silence_min_silence_duration_ms: float = 800.0,
+                silence_max_transition_ms: float = 100.0,
+
+                # -- RMS 包络匹配 --
+                rms_match_frame_len: int = 20,
+                rms_match_hop_len: int = 10,
+                rms_match_mix: float = 1.0, # 一般不用改
+                ) -> "InferTask":
         vec = path(vec_model)
         gen = path(gen_model)
 
@@ -60,4 +77,12 @@ class RvcContext:
             f0_max=f0_max,
             slice_max_len=slice_max_len,
             slice_overlap_len=slice_overlap_len,
+            silence_frame_len=silence_frame_len,
+            silence_hop_len=silence_hop_len,
+            silence_thresh_db=silence_thresh_db,
+            silence_min_silence_duration_ms=silence_min_silence_duration_ms,
+            silence_max_transition_ms=silence_max_transition_ms,
+            rms_match_frame_len=rms_match_frame_len,
+            rms_match_hop_len=rms_match_hop_len,
+            rms_match_mix=rms_match_mix,
         )
