@@ -37,6 +37,9 @@ cuda = [
 openvino = [
     "openvino>=2026.2.1",
 ]
+index = [
+    "faiss-cpu>=1.14.3",
+]
 
 [tool.uv]
 conflicts = [   # 这几个是互斥的，防止 uv 傻乎乎地全装上了

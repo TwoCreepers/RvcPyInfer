@@ -18,3 +18,9 @@ HAS_ONE = HAS_ORT or HAS_OPENVINO
 
 if not HAS_ONE:
     warnings.warn("没有任意一个支持的推理引擎，请至少安装一个可选模块", InferEnvWarn)
+
+try:
+    import faiss # pyright: ignore[reportMissingImports]
+    HAS_FAISS = True
+except ImportError:
+    HAS_FAISS = False

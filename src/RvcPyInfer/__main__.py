@@ -17,7 +17,8 @@ def test():
         "./models/vec-768-layer-12-sim.onnx",
         "./models/illue.onnx",
         48000,
-        "./input/#2_小幸运_洛天依-主1.wav"
+        "./input/#2_小幸运_洛天依-主1.wav",
+        index_path="./models/illue_v2.index"
     )
     task.run_and_save(
         "./output/test.wav",

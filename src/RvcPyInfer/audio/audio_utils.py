@@ -63,7 +63,7 @@ def rms_frame_match(source: Audio,
         frame_len: 帧长度(ms)
         hop_len:   帧移(ms)
         mix:       匹配系数，0.0=直接输出源音频，1.0=完全匹配目标RMS
-        eps:       防除零
+        eps:       防除零，和检测 mix 是否为0
 
     返回:
         Audio: RMS 匹配后的音频
@@ -80,9 +80,12 @@ def rms_frame_match(source: Audio,
             np.full(pad, gain[-1])
         ])
         return np.convolve(padded, kernel, mode='valid').astype(gain.dtype)
+    
+    if mix < eps: # 因为太小了，几乎没有更改
+        return source
 
     src_data, src_sr = source
-    tgt_data, tgt_sr = target
+    _, tgt_sr = target
 
     assert src_sr == tgt_sr, "采样率必须一致"
 

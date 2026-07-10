@@ -15,38 +15,46 @@ if TYPE_CHECKING:
 class InferTask:
     audios: List[Audio]
     def __init__(self, 
-                # -- 必填 --
-                context: "RvcContext",
-                vec_model: Path,
-                gen_model: Tuple[Path, int],
-                *audios: AudioLike,
+            # -- 必填 --
+            context: "RvcContext",
+            vec_model: Path,
+            gen_model: Tuple[Path, int],
+            *audios: AudioLike,
 
-                # -- f0 提取 --
-                f0extract_algorithm: F0ExtractAlgorithm,
-                f0_up_semitone: float = 0,
-                f0_min: float = 50,
-                f0_max: float = 1100,
+            # -- 特征索引 --
+            index_path: Path | None = None,
+            index_rate: float = 0.33,
+            index_k: int = 8, # 检索的最近特征数量
 
-                # -- 强制切片与交叉淡化 --
-                slice_max_len: int = 30,
-                slice_overlap_len: int = 5,
+            # -- f0 提取 --
+            f0extract_algorithm: F0ExtractAlgorithm,
+            f0_up_semitone: float = 0,
+            f0_min: float = 50,
+            f0_max: float = 1100,
 
-                # -- 静音切片 --
-                silence_frame_len: int = 20,
-                silence_hop_len: int = 10,
-                silence_thresh_db: float = -40,
-                silence_min_silence_duration_ms: float = 800.0,
-                silence_max_transition_ms: float = 100.0,
+            # -- 强制切片与交叉淡化 --
+            slice_max_len: int = 30,
+            slice_overlap_len: int = 5,
 
-                # -- RMS 包络匹配 --
-                rms_match_frame_len: int = 20,
-                rms_match_hop_len: int = 10,
-                rms_match_mix: float = 1.0, # 一般不用改
-                ) -> None:
+            # -- 静音切片 --
+            silence_frame_len: int = 20,
+            silence_hop_len: int = 10,
+            silence_thresh_db: float = -40,
+            silence_min_silence_duration_ms: float = 800.0,
+            silence_max_transition_ms: float = 100.0,
+
+            # -- RMS 包络匹配 --
+            rms_match_frame_len: int = 20,
+            rms_match_hop_len: int = 10,
+            rms_match_mix: float = 1.0, # 一般不用改
+            ) -> None:
         self.context = context
-        self.vec = vec_model
-        self.gen = gen_model
+        self.vec = vec_model.resolve()
+        self.gen = (gen_model[0].resolve(), gen_model[1])
         self.audio_likes = list(audios)
+        self.index_path = index_path
+        self.index_rate = index_rate
+        self.index_k = index_k
         self.f0extract_algorithm = f0extract_algorithm
         self.f0_up_semitone = f0_up_semitone
         self.f0_min = f0_min
@@ -78,19 +86,23 @@ class InferTask:
                 self.audios.append((data, sr))
         del self.audio_likes
 
-    def sub_chunk_infer(self, audio: Audio, f0extract_func: Callable[[Audio, int], NDArray[np.float32]], sid: int = 0, seed: int | None = 1234) -> Audio:
+    def core_chunk_infer(self, audio: Audio, f0extract_func: Callable[[Audio, int], NDArray[np.float32]], sid: int = 0, seed: int | None = 1234) -> Audio:
         model = self.context._vec_pool.get(self.vec)
-        hubert = model.infer(audio)
+        feats = model.infer(audio)
 
-        f0 = f0extract_func(audio, hubert.shape[0])
+        f0 = f0extract_func(audio, feats.shape[0]) # 这里是没有批处理维度的
         f0 = apply_rise_tone(f0, self.f0_up_semitone)
 
         mel = normalized_mel(f0_to_mel(f0), f0_to_mel(self.f0_min), f0_to_mel(self.f0_max))
         mel = np.rint(mel).astype(np.int64)
 
+        if self.index_rate > 1e-6 and self.index_path is not None and self.context._index_pool is not None:
+            index = self.context._index_pool.get(self.index_path)
+            feats = index.apply_index(feats, self.index_rate, self.index_k)
+
         model = self.context._gen_pool.get(self.gen)
         res = model.infer(
-            phone=hubert,
+            phone=feats,
             f0_pitch=f0, mel_pitch=mel,
             sid=sid, seed=seed
         )
@@ -120,7 +132,7 @@ class InferTask:
             )
         del audio # 节约点内存
         def handle(c):
-            return self.sub_chunk_infer(c, f0extract_func, sid, seed)
+            return self.core_chunk_infer(c, f0extract_func, sid, seed)
         infer = [handle(i) for i in splited]
         res = crossfade(
             infer,

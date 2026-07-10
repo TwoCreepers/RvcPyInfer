@@ -1,0 +1,2 @@
+class NotSupportedAlgorithmError(Exception):
+    pass

@@ -5,6 +5,7 @@ import pyworld as pw
 import numpy as np
 from numpy.typing import NDArray
 
+from .error.NotSupportedAlgorithmError import NotSupportedAlgorithmError
 from .type_alist import Audio, F0ExtractAlgorithm
 
 def interpolate_f0[T: np.floating](f0: NDArray[T]) -> NDArray[T]:
@@ -96,6 +97,8 @@ def build_f0extract_func(algorithm: F0ExtractAlgorithm,
         return lambda a, l: dio(a, l, f0_min=f0_min, f0_max=f0_max, allowed_range=allowed_range, channels_in_octave=channels_in_octave)
     elif algorithm == "harvest":
         return lambda a, l: harvest(a, l, f0_min=f0_min, f0_max=f0_max)
+    else:
+        raise NotSupportedAlgorithmError(f"不支持的 f0 提取算法: {algorithm}")
      
 def apply_rise_tone[T: np.floating](f0: NDArray[T], up_semitone: float) -> NDArray[T]:
     return f0 * 2.0 ** (up_semitone / 12.0)
