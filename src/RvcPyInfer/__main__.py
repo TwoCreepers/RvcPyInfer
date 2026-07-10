@@ -8,9 +8,22 @@ from .RvcContext import RvcContext
 from .InferProviders import InferProviders
 
 def test():
+
+    wav, sr = soundfile.read("./input/#2_小幸运_洛天依-主1.wav", dtype="float32")
+    if len(wav.shape) != 1:
+        wav = wav.mean(axis=1)
+    wav = wav.astype(np.float32)
+    s = split_by_silence(
+        (wav, sr)
+    )
+    print(len(s))
+    print_segments_info(s)
+
+    exit()
+
     start = time.time()
 
-    p = InferProviders.DML
+    p = InferProviders.ORT_CPU
     print(p)
     context = RvcContext(p)
     task = context.build_task(

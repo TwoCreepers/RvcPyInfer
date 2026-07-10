@@ -9,23 +9,20 @@ from .type_alist import AudioLike, PathLike, F0ExtractAlgorithm
 from .path_utils import path
 from .InferTask import InferTask
 
+# 请注意，RvcContext 并不是线程安全的
 class RvcContext:
     def __init__(self,
                  providers: InferProviders = InferProviders.default(),
                  vec_pool_permanent_size: int = 1,
-                 vec_pool_max_borrow: int = 5,  # 实际上这里是最大并发量
-                 gen_pool_permanent_size: int = 2,
-                 gen_pool_max_borrow: int = 5) -> None:
+                 gen_pool_permanent_size: int = 2,) -> None:
         self._providers = providers
         self._vec_pool = ModelSimplePool[Path, ContentVec](
             lambda p: ContentVec(p.resolve(), self._providers),
-            vec_pool_permanent_size,
-            vec_pool_max_borrow,
+            vec_pool_permanent_size
         )        
         self._gen_pool = ModelSimplePool[Tuple[Path, int], RvcGen](
             lambda args: RvcGen(args[0].resolve(), args[1], self._providers),
             gen_pool_permanent_size,
-            gen_pool_max_borrow
         )
 
     def clear_pool(self):
@@ -41,6 +38,8 @@ class RvcContext:
                    f0_up_semitone: float = 0,
                    f0_min: float = 50,
                    f0_max: float = 1100,
+                   slice_max_len = 30,
+                   slice_overlap_len = 5,
                    ) -> "InferTask":
         vec = path(vec_model)
         gen = path(gen_model)
@@ -59,4 +58,6 @@ class RvcContext:
             f0_up_semitone=f0_up_semitone,
             f0_min=f0_min,
             f0_max=f0_max,
+            slice_max_len=slice_max_len,
+            slice_overlap_len=slice_overlap_len,
         )

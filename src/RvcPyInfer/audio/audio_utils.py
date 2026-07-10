@@ -75,7 +75,8 @@ def split_by_silence(
     hop_len: int = 10,
     silence_thresh_db: float = -35,
     ref: float = 1.0,
-    min_silence_duration_ms: float = 300.0,
+    min_silence_duration_ms: float = 800.0,
+    max_transition_ms: float = 50
 ) -> List[Tuple[Audio, bool]]:
     """
     按静音切片，返回所有片段（含静音段）。
@@ -86,13 +87,15 @@ def split_by_silence(
         hop_len: 帧移
         silence_thresh_db: 静音阈值
         ref: RMS参考值
-        min_silence_duration_ms: 最短静音持续时间。小于此值的静音段将被忽略，
-                                 其前后两段语音会合并为一段。
+        min_silence_duration_ms: 最短静音持续时间。小于此值的静音段将被忽略。请注意，这不代表返回的静音段一定大于这个值
+        max_transition_ms: 语音段的过渡时间，不得大于 0.5*min_silence_duration_ms
         
     返回: List[Tuple[Audio, bool]]
         - Audio: 切片后的音频
         - bool:  True = 该段为静音, False = 该段为语音
     """
+    assert max_transition_ms * 2 < min_silence_duration_ms, "最大过渡长度不能小于静音长度"
+
     data, sr = audio
     data = np.asarray(data)
 
@@ -109,16 +112,16 @@ def split_by_silence(
     sil_ends   = np.where(diff == -1)[0]   # 静音结束帧
 
     if len(sil_starts) > 0 and min_silence_duration_ms > 0:
-            # 计算最短静音所需帧数 (向上取整，至少1帧)
-            min_silence_frames = max(1, int(np.ceil(min_silence_duration_ms / hop_len)))
-            
-            # 计算每个静音段的持续帧数
-            sil_lengths = sil_ends - sil_starts
-            
-            # 过滤出长度达标的静音段
-            valid_mask = sil_lengths >= min_silence_frames
-            sil_starts = sil_starts[valid_mask]
-            sil_ends = sil_ends[valid_mask]
+        # 计算最短静音所需帧数 (向上取整，至少1帧)
+        min_silence_frames = max(1, int(np.ceil(min_silence_duration_ms / hop_len)))
+        
+        # 计算每个静音段的持续帧数
+        sil_lengths = sil_ends - sil_starts
+        
+        # 过滤出长度达标的静音段
+        valid_mask = sil_lengths >= min_silence_frames
+        sil_starts = sil_starts[valid_mask]
+        sil_ends = sil_ends[valid_mask]
 
     # 3. 交错排列得到所有边界
     #    bounds = [0, ss0, se0, ss1, se1, ..., n_frames]
@@ -138,19 +141,106 @@ def split_by_silence(
     if bounds[-1] == bounds[-2]:
         sample_bounds[-2] = len(data) # 说明实际上没有这个段，这是靠 pad 出来的段
 
-    results: List[Tuple[Audio, bool]] = []
-    for j in range(len(sample_bounds) - 1):
-        s = sample_bounds[j]
-        e = sample_bounds[j + 1]
-        seg_data = data[s:e]
-        is_sil = (j % 2 == 1)           # 奇数段 = 静音
+    # 5. 调整索引形成过渡
+    max_transition_size = max_transition_ms * sr // 1000
+    s = sample_bounds[1:-1:2]  
+    e = sample_bounds[2::2]   
+    sil_size = e - s
+    voice_size = sample_bounds[1::2] - sample_bounds[0:-1:2]
+    # 因为前面修正 pad 逻辑的时候会产生 0 长切片，这里不能对 0 长切片调整（因为那没有意义）
+    voice_mask = voice_size > 0 
+    start_mask = voice_mask[:-1]
+    end_mask = voice_mask[1:]
+    transition_size = np.minimum(max_transition_size, sil_size // 2)
+    s[start_mask] = s[start_mask] + transition_size[start_mask]
+    e[end_mask] = e[end_mask] - transition_size[end_mask]
 
-        if len(seg_data) == 0:
-            continue
+    # 6. 切片前的合并
+    # 6.1 处理零长
+    is_sil = np.empty(len(sample_bounds) - 1, dtype=np.bool)
+    is_sil[1::2] = True
+    is_sil[0::2] = False
+    index_diff = np.diff(sample_bounds)
+    index_mask = index_diff > 0 # 0 长丢掉
+    index_mask = np.pad(index_mask, [1, 0], mode="constant", constant_values=True)
+    is_sil = is_sil[index_mask[1:]]
+    sample_bounds = sample_bounds[index_mask]
+    # 6.2 合并同类项
+    sil_diff = np.diff(is_sil.astype(np.int8))
+    sil_mask = sil_diff != 0
+    sil_mask = np.pad(sil_mask, [1, 1], mode="constant", constant_values=True)
+    is_sil = is_sil[sil_mask[:-1]]
+    sample_bounds = sample_bounds[sil_mask]
 
-        results.append(((seg_data, sr), is_sil))
+    # 7. 切片！
+    return [((data[sample_bounds[i]:sample_bounds[i+1]], sr), is_sil[i]) for i in range(len(sample_bounds) - 1)]
 
-    return results
+def split_by_max_len_with_overlap(
+        audio: Audio,
+        *,
+        max_len: int = 30,
+        overlap_len: int = 5
+    ) -> List[Audio]:
+    data, sr = audio
+    max_size = sr * max_len
+    
+    if overlap_len < 0 or overlap_len >= max_len or len(data) <= max_size:
+        return [audio]
+        
+    overlap_size = sr * overlap_len
+    step = max_size - overlap_size  # 每次向前推进的步长
+
+    res: List[Audio] = []
+    offset = 0
+    
+    while offset < len(data):
+        end = min(offset + max_size, len(data))
+        res.append((data[offset:end], sr))
+        
+        if end == len(data):
+            break
+            
+        offset += step
+        
+    return res
+
+def crossfade(
+        audios: List[Audio],
+        *,
+        overlap_len: int = 5
+    ) -> Audio:
+    if len(audios) == 0:
+        raise ValueError("音频列表为空")
+    elif len(audios) == 1:
+        return audios[0]
+
+    _, sr = audios[0]
+    datas = [d for d, _ in audios]
+    overlap_size = sr * overlap_len
+    fade_in = np.linspace(0.0, 1.0, overlap_size)
+    fade_out = np.linspace(1.0, 0.0, overlap_size)
+
+    data_list = []
+    # 第一个
+    data_list.append(datas[0][:-overlap_size])
+    data_list.append(datas[0][-overlap_size:] * fade_out + datas[1][:overlap_size] * fade_in)
+
+    # 中间
+    for i in range(1, len(datas) - 1):
+        curr = datas[i]
+        next = datas[i + 1]
+        data_list.append(curr[overlap_size:-overlap_size])
+        data_list.append(curr[-overlap_size:] * fade_out + next[:overlap_size] * fade_in)
+
+    # 最后一个
+    data_list.append(datas[-1][overlap_size:])
+
+    return np.concatenate(data_list), sr
+
+def copy_audio(audios: List[Audio]) -> List[Audio]:
+    for i in range(1, len(audios)):
+        audios[i] = (audios[i][0].copy(), audios[i][1])
+    return audios
 
 def print_segments_info(segments: List[Tuple[Audio, bool]]) -> None:
     """

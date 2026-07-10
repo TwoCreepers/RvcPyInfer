@@ -28,7 +28,7 @@ def load_model(path: Path, providers: InferProviders) -> "Tuple[ort.InferenceSes
             model = core.read_model(str((path.parent / path.stem).with_suffix(".xml").resolve()))
             compiled_model = core.compile_model(model=model, device_name=providers.get_openvino_device())
         elif (path.parent / path.stem).with_suffix(".onnx").exists():
-            warnings.warn("您正在尝试使用 OpenVINO 运行 onnx，模型将自动转换", InferModelWarn)
+            warnings.warn("您正在尝试使用 OpenVINO 运行 onnx，模型将自动转换并存档", InferModelWarn)
             model = convert_model(str((path.parent / path.stem).with_suffix(".onnx").resolve()))
             save_model(model, str((path.parent / path.stem).with_suffix(".xml").resolve()), compress_to_fp16=False)
             compiled_model = core.compile_model(model=model, device_name=providers.get_openvino_device())

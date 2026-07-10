@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 
 from .type_alist import FileLike, Audio, AudioLike, F0ExtractAlgorithm, F0ExtractAlgorithmList
 from .f0_utils import build_f0extract_func, apply_rise_tone, f0_to_mel, normalized_mel
+from .audio.audio_utils import split_by_silence, split_by_max_len_with_overlap, crossfade
 
 if TYPE_CHECKING:
     from .RvcContext import RvcContext
@@ -22,15 +23,19 @@ class InferTask:
                  f0_up_semitone: float = 0,
                  f0_min: float = 50,
                  f0_max: float = 1100,
+                 slice_max_len = 30,
+                 slice_overlap_len = 5,
                  ) -> None:
         self.context = context
         self.vec = vec_model
         self.gen = gen_model
         self.audio_likes = list(audios)
         self.f0extract_algorithm = f0extract_algorithm
+        self.f0_up_semitone = f0_up_semitone
         self.f0_min = f0_min
         self.f0_max = f0_max
-        self.f0_up_semitone = f0_up_semitone
+        self.slice_max_len = slice_max_len
+        self.slice_overlap_len = slice_overlap_len
 
     def read(self) -> None:
         self.audios = []
@@ -48,75 +53,61 @@ class InferTask:
                 self.audios.append((data, sr))
         del self.audio_likes
 
-    def hubert_extract(self) -> None:
-        with self.context._vec_pool.borrow(self.vec) as model:
-            self.hubert_list: List[NDArray[np.float32]] = [model.infer(a) for a in self.audios]
+    def chunk_infer(self, audio: Audio, f0extract_func: Callable[[Audio, int], NDArray[np.float32]], sid: int = 0, seed: int | None = 1234) -> Audio:
+        model = self.context._vec_pool.get(self.vec)
+        hubert = model.infer(audio)
 
-    def f0extract(self) -> None:
-        assert self.f0extract_algorithm in F0ExtractAlgorithmList
-        func = build_f0extract_func(
-            self.f0extract_algorithm, # pyright: ignore[reportArgumentType]
-            f0_min=self.f0_min,
-            f0_max=self.f0_max
+        f0 = f0extract_func(audio, hubert.shape[0])
+        f0 = apply_rise_tone(f0, self.f0_up_semitone)
+
+        mel = normalized_mel(f0_to_mel(f0), f0_to_mel(self.f0_min), f0_to_mel(self.f0_max))
+        mel = np.rint(mel).astype(np.int64)
+
+        model = self.context._gen_pool.get(self.gen)
+        res = model.infer(
+            phone=hubert,
+            f0_pitch=f0, mel_pitch=mel,
+            sid=sid, seed=seed
         )
-        self.f0_list = [func(a, len(h)) for a, h in zip(self.audios, self.hubert_list)]
 
-    def apply_rise_tone(self) -> None:
-        self.f0_list = [apply_rise_tone(f0, self.f0_up_semitone) for f0 in self.f0_list]
+        res_d, res_sr = res
+        source_d, source_sr = audio
 
-    def build_mel(self) -> None:
-        self.mel_list = [f0_to_mel(f0) for f0 in self.f0_list]
-        del self.audios
-
-    def normalized_mel(self) -> None:
-        min = f0_to_mel(self.f0_min)
-        max = f0_to_mel(self.f0_max)
-        self.mel_list = [normalized_mel(mel, min, max) for mel in self.mel_list]
-        self.mel_i64_list = [np.rint(mel).astype(np.int64) for mel in self.mel_list]
-        del self.mel_list
+        source_len = len(source_d)
+        res_len = source_len * res_sr // source_sr
+        
+        pad_len = res_len - len(res_d)
+        if pad_len == 0:
+            return res
+        elif pad_len < 0:
+            return (res_d[:res_len], res_sr)
+        else:
+            return (
+                np.pad(res_d, [0, pad_len], mode="constant"),
+                res_sr
+            )
 
     def gen_infer(self, callback: Callable[[int, Audio], None], sid: int = 0, seed: int | None = 1234) -> None:
-        with self.context._gen_pool.borrow(self.gen) as model:
-            for i in range(len(self.hubert_list)):
-                hubert = self.hubert_list[i]
-                f0 = self.f0_list[i]
-                mel = self.mel_i64_list[i]
-                
-                res = model.infer(
-                    hubert,
-                    mel,
-                    f0,
-                    sid,
-                    seed
+        func = build_f0extract_func(self.f0extract_algorithm, self.f0_min, self.f0_max) # pyright: ignore[reportArgumentType]
+        for i, audio in enumerate(self.audios):
+            splited = split_by_max_len_with_overlap(
+                audio,
+                max_len=self.slice_max_len,
+                overlap_len=self.slice_overlap_len
                 )
-                res_d, res_sr = res
-                source_d, source_sr = self.audios[i]
-
-                source_len = len(source_d)
-                res_len = source_len * res_sr // source_sr
-                
-                pad_len = res_len - len(res_d)
-                if pad_len == 0:
-                    callback(i, res)
-                elif pad_len < 0:
-                    callback(i, (res_d[:res_len], res_sr))
-                else: # 反正原项目就是这么做的
-                    callback(i, (np.pad(
-                        res_d,
-                        [0, pad_len],
-                        mode="constant",
-                    ), res_sr))
-
-    def pro_infer(self) -> None:
-        self.hubert_extract()
-        self.f0extract()
-        self.apply_rise_tone()
-        self.build_mel()
-        self.normalized_mel()
+            del audio # 节约点内存
+            def handle(c):
+                return self.chunk_infer(c, func, sid, seed)
+            infer = [handle(i) for i in splited]
+            infer = list(infer)
+            res = crossfade(
+                infer,
+                overlap_len=self.slice_overlap_len
+                )
+            callback(i, res)
                 
     def run(self, sid: int = 0, seed: int | None = 1234) -> List[Audio]:
         self.read()
-        self.pro_infer()
 
         res = []
         self.gen_infer(
@@ -134,9 +125,6 @@ class InferTask:
 
         if len(self.audios) != len(output):
             raise ValueError(f"音频数量 {len(self.audios)} 与输出数量 {len(output)} 不匹配")
-
-        self.pro_infer()
-
         def save(i: int, a: Audio) -> None:
             d, s = a
             soundfile.write(output[i], 

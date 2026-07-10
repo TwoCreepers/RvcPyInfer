@@ -1,3 +1,5 @@
+import threading
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -23,8 +25,8 @@ class ContentVec:
         logits = None
         if self.session is not None:
             logits = self.session.run(
-                output_names=["embed"], 
-                input_feed=input)[0]
+                    output_names=["embed"], 
+                    input_feed=input)[0]
             assert isinstance(logits, np.ndarray), "ort 输出应为 NDArray"
         elif self.compiled_model is not None:
             infer_request = self.compiled_model.create_infer_request()

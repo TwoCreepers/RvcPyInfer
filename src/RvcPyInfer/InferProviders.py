@@ -68,8 +68,9 @@ class InferProviders(Flag):
             return InferProviders.CUDA
         elif InferProviders.FORCE_DML in available:
             return InferProviders.DML
-        elif InferProviders.OPENVINO_AUTO in available:
-            return InferProviders.OPENVINO_AUTO
+        elif InferProviders.OPENVINO_CPU in available:
+            # 有时候自动的异构并行反而比纯 CPU 还慢，这里保守点
+            return InferProviders.OPENVINO_CPU
         elif InferProviders.ORT_CPU in available:
             return InferProviders.ORT_CPU
         else:
