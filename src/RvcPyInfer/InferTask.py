@@ -21,6 +21,10 @@ class InferTask:
             gen_model: Tuple[Path, int],
             *audios: AudioLike,
 
+            # 可选扩展
+            sid: int = 0,
+            seed: int | None = 1234,
+
             # -- 特征索引 --
             index_path: Path | None = None,
             index_rate: float = 0.33,
@@ -52,6 +56,8 @@ class InferTask:
         self.vec = vec_model.resolve()
         self.gen = (gen_model[0].resolve(), gen_model[1])
         self.audio_likes = list(audios)
+        self.sid = sid
+        self.seed = seed
         self.index_path = index_path
         self.index_rate = index_rate
         self.index_k = index_k
@@ -86,7 +92,7 @@ class InferTask:
                 self.audios.append((data, sr))
         del self.audio_likes
 
-    def core_chunk_infer(self, audio: Audio, f0extract_func: Callable[[Audio, int], NDArray[np.float32]], sid: int = 0, seed: int | None = 1234) -> Audio:
+    def core_chunk_infer(self, audio: Audio, f0extract_func: Callable[[Audio, int], NDArray[np.float32]]) -> Audio:
         model = self.context._vec_pool.get(self.vec)
         feats = model.infer(audio)
 
@@ -104,7 +110,7 @@ class InferTask:
         res = model.infer(
             phone=feats,
             f0_pitch=f0, mel_pitch=mel,
-            sid=sid, seed=seed
+            sid=self.sid, seed=self.seed
         )
 
         res_d, res_sr = res
@@ -124,7 +130,7 @@ class InferTask:
                 res_sr
             )
     
-    def chunk_infer(self, audio: Audio, f0extract_func: Callable[[Audio, int], NDArray[np.float32]], sid: int = 0, seed: int | None = 1234) -> Audio:
+    def chunk_infer(self, audio: Audio, f0extract_func: Callable[[Audio, int], NDArray[np.float32]]) -> Audio:
         splited = split_by_max_len_with_overlap( # 就算不足一个切片长也不会报错哒
             audio,
             max_len=self.slice_max_len,
@@ -132,7 +138,7 @@ class InferTask:
             )
         del audio # 节约点内存
         def handle(c):
-            return self.core_chunk_infer(c, f0extract_func, sid, seed)
+            return self.core_chunk_infer(c, f0extract_func)
         infer = [handle(i) for i in splited]
         res = crossfade(
             infer,
@@ -140,8 +146,8 @@ class InferTask:
             )
         return res
 
-    def gen_infer(self, callback: Callable[[int, Audio], None], sid: int = 0, seed: int | None = 1234) -> None:
-        assert self.f0extract_algorithm in F0ExtractAlgorithmList, f"{self.f0extract_algorithm} 不是受支持的算法"
+    def gen_infer(self, callback: Callable[[int, Audio], None]) -> None:
+        assert self.f0extract_algorithm in F0ExtractAlgorithmList, f"{self.f0extract_algorithm} 不是受支持的 f0 提取算法"
         func = build_f0extract_func(self.f0extract_algorithm, self.f0_min, self.f0_max) # pyright: ignore[reportArgumentType]
         for i, audio in enumerate(self.audios):
             splited = split_by_silence(
@@ -157,7 +163,7 @@ class InferTask:
                 if is_sil:
                     chunks.append(reSR(chunk, target_sr=self.gen[1])) # 内部判断相等会直接返回
                 else:
-                    chunks.append(self.chunk_infer(chunk, func, sid, seed))
+                    chunks.append(self.chunk_infer(chunk, func))
             datas = [data for data, sr in chunks]
             res = (np.concatenate(datas), self.gen[1])
             res = rms_frame_match(
@@ -169,21 +175,18 @@ class InferTask:
             )
             callback(i, res)
                 
-    def run(self, sid: int = 0, seed: int | None = 1234) -> List[Audio]:
+    def run(self) -> List[Audio]:
         self.read()
 
         res = []
         self.gen_infer(
-            lambda _, a: res.append(a),
-            sid, seed
+            lambda _, a: res.append(a)
         )
         return res
     
     def run_and_save(self, *output: FileLike, 
                      subtype: str | None = None,
-                     format: str | None = None,
-                     sid: int = 0, 
-                     seed: int | None = 1234):
+                     format: str | None = None):
         self.read()
 
         if len(self.audios) != len(output):
@@ -195,16 +198,12 @@ class InferTask:
                             subtype=subtype,
                             format=format)
         self.gen_infer(
-            save, sid, seed
+            save
         )
 
     def run_and_callback(self, 
-                        callback: Callable[[int, Audio], None],
-                        sid: int = 0, 
-                        seed: int | None = 1234) -> None:
+                        callback: Callable[[int, Audio], None]) -> None:
         self.read()
         self.gen_infer(
-            callback=callback,
-            sid=sid,
-            seed=seed
+            callback=callback
         )

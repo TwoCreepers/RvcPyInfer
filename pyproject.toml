@@ -15,8 +15,8 @@ authors = [
 ]
 
 [project.scripts]
-rvc-py-infer = "RvcPyInfer.__main__:main"
-rvc-py-infer-test = "RvcPyInfer.__main__:test"
+rvc-infer = "RvcPyInfer.__main__:infer_main"
+rvc-model = "RvcPyInfer.__main__:export_main"
 
 # 构建系统
 [build-system]

@@ -49,6 +49,10 @@ class RvcContext:
             gen_model_sr: int,
             *audios: AudioLike,
 
+            # 可选扩展
+            sid: int = 0,
+            seed: int | None = 1234,
+
             # -- 特征索引 --
             index_path: PathLike | None = None,
             index_rate: float = 0.33,
@@ -99,6 +103,8 @@ class RvcContext:
             vec,
             (gen, gen_model_sr),
             *audios,
+            sid=sid,
+            seed=seed,
             index_path=index_path,
             index_rate=index_rate,
             index_k=index_k,
