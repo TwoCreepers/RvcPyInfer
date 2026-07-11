@@ -3,6 +3,7 @@ name = "RvcPyInfer"
 version = "0.1.0"
 description = "rvc 的 onnx 模型导出格式推理实现"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.13"
 dependencies = [
     "numpy>=2.3",
