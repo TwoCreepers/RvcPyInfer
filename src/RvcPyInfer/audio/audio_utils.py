@@ -175,8 +175,6 @@ def split_by_silence(
         - Audio: 切片后的音频
         - bool:  True = 该段为静音, False = 该段为语音
     """
-    assert max_transition_ms * 2 < min_silence_duration_ms, "最大过渡长度不能小于静音长度"
-
     data, sr = audio
     data = np.asarray(data)
 
