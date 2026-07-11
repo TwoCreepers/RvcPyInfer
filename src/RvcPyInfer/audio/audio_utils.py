@@ -245,8 +245,7 @@ def split_by_silence(
     is_sil = is_sil[index_mask[1:]]
     sample_bounds = sample_bounds[index_mask]
     # 6.2 合并同类项
-    sil_diff = np.diff(is_sil.astype(np.int8))
-    sil_mask = sil_diff != 0
+    sil_mask = is_sil[:-1] != is_sil[1:] 
     sil_mask = np.pad(sil_mask, [1, 1], mode="constant", constant_values=True)
     is_sil = is_sil[sil_mask[:-1]]
     sample_bounds = sample_bounds[sil_mask]
