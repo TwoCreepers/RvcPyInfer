@@ -27,9 +27,9 @@ def main():
     parser = argparse.ArgumentParser(description="RVC 语音转换命令行工具")
     
     # --- 必填参数 ---
-    parser.add_argument("--vec_model", type=str, required=True, help="ContentVec 特征提取模型路径 (.onnx)")
-    parser.add_argument("--gen_model", type=str, required=True, help="RVC 生成模型路径 (.onnx)")
-    parser.add_argument("--gen_model_sr", type=int, required=True, help="生成模型采样率 (如 40000, 48000)")
+    parser.add_argument("--vec-model", type=str, required=True, help="ContentVec 特征提取模型路径 (.onnx)")
+    parser.add_argument("--gen-model", type=str, required=True, help="RVC 生成模型路径 (.onnx)")
+    parser.add_argument("--gen-model-sr", type=int, required=True, help="生成模型采样率 (如 40000, 48000)")
     parser.add_argument("-i", "--inputs", nargs="+", type=str, required=True, help="输入音频文件路径 (可传入多个)")
     parser.add_argument("-o", "--outputs", nargs="+", type=str, required=True, help="输出音频文件路径 (数量必须与输入一致)")
     
@@ -43,24 +43,24 @@ def main():
     parser.add_argument("--seed", type=int, default=1234, help="随机种子")
     
     # --- 特征索引 ---
-    parser.add_argument("--index_path", type=str, default=None, help="特征索引文件路径")
-    parser.add_argument("--index_rate", type=float, default=0.33, help="特征索引比率 (0-1)")
-    parser.add_argument("--index_k", type=int, default=8, help="检索的最近特征数量")
+    parser.add_argument("--index-path", type=str, default=None, help="特征索引文件路径")
+    parser.add_argument("--index-rate", type=float, default=0.33, help="特征索引比率 (0-1)")
+    parser.add_argument("--index-k", type=int, default=8, help="检索的最近特征数量")
     
     # --- f0 提取 ---
-    parser.add_argument("--f0_method", type=str, default="dio", help="f0 提取算法 (如 dio, pm, rmvpe, fcpe 等)")
+    parser.add_argument("--f0-method", type=str, default="dio", help="f0 提取算法 (如 dio, pm, rmvpe, fcpe 等)")
     parser.add_argument("--pitch", type=float, default=0, help="升降调 (半音)")
-    parser.add_argument("--f0_min", type=float, default=50, help="最低 f0")
-    parser.add_argument("--f0_max", type=float, default=1100, help="最高 f0")
+    parser.add_argument("--f0-min", type=float, default=50, help="最低 f0")
+    parser.add_argument("--f0-max", type=float, default=1100, help="最高 f0")
     
     # --- 强制切片与交叉淡化 ---
-    parser.add_argument("--slice_max_len", type=int, default=30, help="最大切片长度 (秒)")
-    parser.add_argument("--slice_overlap_len", type=int, default=5, help="切片交叉淡化长度 (秒)")
+    parser.add_argument("--slice-max-len", type=int, default=30, help="最大切片长度 (秒)")
+    parser.add_argument("--slice-overlap-len", type=int, default=5, help="切片交叉淡化长度 (秒)")
     
     # --- 静音切片 ---
-    parser.add_argument("--silence_thresh_db", type=float, default=-40, help="静音阈值")
-    parser.add_argument("--silence_min_duration", type=float, default=800.0, help="最小静音时长")
-    parser.add_argument("--silence_max_transition", type=float, default=100.0, help="最大过渡时长")
+    parser.add_argument("--silence-thresh-db", type=float, default=-40, help="静音阈值")
+    parser.add_argument("--silence-min-duration", type=float, default=800.0, help="最小静音时长")
+    parser.add_argument("--silence-max-transition", type=float, default=100.0, help="最大过渡时长")
     
     args = parser.parse_args()
 
@@ -78,9 +78,9 @@ def main():
         # 2. 构建 InferTask
         print("正在构建推理任务...")
         task = context.build_task(
-            vec_model=args.vec_model,
-            gen_model=args.gen_model,
-            gen_model_sr=args.gen_model_sr,
+            args.vec_model,
+            args.gen_model,
+            args.gen_model_sr,
             *args.inputs,
             sid=args.sid,
             seed=args.seed,
