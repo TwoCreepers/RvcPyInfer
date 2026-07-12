@@ -16,3 +16,5 @@ from .onnx.ContentVec import ContentVec
 from .onnx.RvcGen import RvcGen
 from .onnx.ModelSimplePool import ModelSimplePool
 from .cli import main as ModelInferCLI
+
+from ._version import __version__

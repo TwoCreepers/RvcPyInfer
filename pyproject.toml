@@ -1,7 +1,6 @@
 [project]
 name = "RvcPyInfer"
-version = "0.1.0"
-description = "rvc 的 onnx 模型导出格式推理实现"
+description = "Rvc 的 ONNX 模型导出格式推理实现"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.13"
@@ -14,6 +13,12 @@ dependencies = [
 authors = [
     { name = "观赏鱼" }
 ]
+
+dynamic = ["version"]
+
+# 读取版本号
+[tool.hatch.version]
+path = "src/RvcPyInfer/_version.py"
 
 [project.scripts]
 rvc-infer = "RvcPyInfer.__main__:infer_main"
