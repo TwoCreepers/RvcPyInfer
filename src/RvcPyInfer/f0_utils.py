@@ -94,9 +94,9 @@ def build_f0extract_func(algorithm: F0ExtractAlgorithm,
         allowed_range: float = 0.1,
         channels_in_octave: float = 2.0) -> Callable[[Audio, int], NDArray[np.float32]]:
     if algorithm == "dio":
-        return lambda a, l: dio(a, l, f0_min=f0_min, f0_max=f0_max, allowed_range=allowed_range, channels_in_octave=channels_in_octave)
+        return lambda a, p_l: dio(a, p_l, f0_min=f0_min, f0_max=f0_max, allowed_range=allowed_range, channels_in_octave=channels_in_octave)
     elif algorithm == "harvest":
-        return lambda a, l: harvest(a, l, f0_min=f0_min, f0_max=f0_max)
+        return lambda a, p_l: harvest(a, p_l, f0_min=f0_min, f0_max=f0_max)
     else:
         raise NotSupportedAlgorithmError(f"不支持的 f0 提取算法: {algorithm}")
      

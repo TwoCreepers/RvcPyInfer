@@ -21,7 +21,7 @@ dynamic = ["version"]
 path = "src/RvcPyInfer/_version.py"
 
 [project.scripts]
-rvc-infer = "RvcPyInfer.__main__:infer_main"
+rvc-infer = "RvcPyInfer.onnx.export.cli:main"
 rvc-model = "RvcPyInfer.__main__:export_main"
 
 # 构建系统
@@ -90,8 +90,8 @@ exclude = [
 select = [
     "E",  # pycodestyle 错误
     "F",  # pyflakes
-    "I",  # isort
-    "UP", # pyupgrade
+    #"I",  # isort
+    #"UP", # pyupgrade
 ]
 
 ignore = [

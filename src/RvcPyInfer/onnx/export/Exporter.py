@@ -1,10 +1,3 @@
-const_tips = """# ----------------------------------------------------------------
-# 这是自动生成的临时脚本，若您看见工具未能正常删除的话，您可以手动删除它
-# 您当然可以尝试运行了，甚至保存下来，脚本引用的是绝对路径
-# ----------------------------------------------------------------
-
-"""
-
 import re
 import os
 import json
@@ -18,6 +11,13 @@ from importlib.resources import files
 
 from ...path_utils import path
 from ...type_alist import PathLike
+
+const_tips = """# ----------------------------------------------------------------
+# 这是自动生成的临时脚本，若您看见工具未能正常删除的话，您可以手动删除它
+# 您当然可以尝试运行了，甚至保存下来，脚本引用的是绝对路径
+# ----------------------------------------------------------------
+
+"""
 
 class Exporter:
     def __init__(self, root: PathLike, model: PathLike, export_target: PathLike, runtime: PathLike | None = None) -> None:
