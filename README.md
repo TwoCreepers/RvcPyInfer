@@ -79,4 +79,4 @@ pip install ./rvcpyinfer-0.1.0-py3-none-any[cpu]
 格式： `rvc-model export -m <你的pth模型路径> -t <你希望输出到哪> -r <rvc 原项目的根路径> --runtime <可选的导出用的 python 解释器路径，默认使用 rvc 原项目整合包自带的解释器>`
 
 ## 许可证
-本项目代码部分使用 [`MIT`](https://mit-license.org/) 许可证授权与你，非代码部分使用 `CC BY 4.0` 授权与你。  
+在文件头部或文件所在目录未有额外说明的情况下，本项目代码部分使用 [`MIT`](https://mit-license.org/) 许可证授权与你，非代码部分使用 `CC BY 4.0` 授权与你。  
