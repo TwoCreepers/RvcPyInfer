@@ -47,7 +47,6 @@ index = [
     "faiss-cpu>=1.14.3",
 ]
 dev = [
-    "mypy>=2.2.0",
     "pyright>=1.1.411",
     "ruff>=0.15.21",
 ]
@@ -95,7 +94,7 @@ select = [
 ]
 
 ignore = [
-    "E501",  # 行太长，信任格式化工具
+    
 ]
 fixable = ["ALL"]
 unfixable = []
