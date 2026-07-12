@@ -16,7 +16,7 @@ def interpolate_f0[T: np.floating](f0: NDArray[T]) -> NDArray[T]:
     """
     nonzero_idx = np.where(f0 > 0.0)[0]
     if len(nonzero_idx) == 0:
-            return f0
+        return f0
     all_idx = np.arange(len(f0))
     ip_data = np.interp(all_idx, nonzero_idx, f0[nonzero_idx])
     ip_data = ip_data.astype(f0.dtype)
