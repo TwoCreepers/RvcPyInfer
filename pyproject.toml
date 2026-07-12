@@ -20,6 +20,24 @@ dynamic = ["version"]
 [tool.hatch.version]
 path = "src/RvcPyInfer/_version.py"
 
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+]
+keywords = [
+    "rvc", 
+    "onnx", 
+    "voice-conversion",
+]
+
+[project.urls]
+Homepage = "https://github.com/TwoCreepers/RvcPyInfer"
+Repository = "https://github.com/TwoCreepers/RvcPyInfer"
+
 [project.scripts]
 rvc-infer = "RvcPyInfer.onnx.export.cli:main"
 rvc-model = "RvcPyInfer.__main__:export_main"
@@ -59,7 +77,6 @@ conflicts = [   # 这几个是互斥的，防止 uv 傻乎乎地全装上了
         { extra = "dml" }
     ],
 ]
-
 
 [tool.pyright]
 include = ["src"]
