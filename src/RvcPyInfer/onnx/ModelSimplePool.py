@@ -1,5 +1,6 @@
-from typing import Callable
 from collections import OrderedDict
+from collections.abc import Callable
+
 
 class ModelSimplePool[TKey, TModel]:
     def __init__(self, factory: Callable[[TKey], TModel], permanent_size: int = 1) -> None:

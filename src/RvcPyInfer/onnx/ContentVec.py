@@ -1,12 +1,13 @@
 import numpy as np
 from numpy.typing import NDArray
 
+from ..audio.audio_utils import reSR
 from ..error.InferEnvError import InferEnvError
 from ..InferProviders import InferProviders
-from ..type_alist import PathLike, Audio
-from ..audio.audio_utils import reSR
 from ..path_utils import path as pathf
+from ..type_alist import Audio, PathLike
 from .model_loader import load_model
+
 
 class ContentVec:
     def __init__(self, path: PathLike, providers: InferProviders) -> None:

@@ -1,11 +1,10 @@
-import re
-import os
-import json
-import uuid
-import random
 import hashlib
+import json
+import os
+import random
+import re
 import subprocess
-from typing import List, Dict
+import uuid
 from datetime import datetime
 from importlib.resources import files
 
@@ -36,7 +35,7 @@ class Exporter:
     @staticmethod
     def build_parse_prefix() -> str:
         alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-        tmp: List[str] = []
+        tmp: list[str] = []
         for _ in range(8):
             tmp.append(alphabet[random.randint(0, len(alphabet) - 1)])
         return "".join(tmp)
@@ -50,7 +49,7 @@ class Exporter:
         template = template.replace("/./..{code.InsertionPoint.2}.././", self.parse_prefix)
         template = template.replace("/./..{code.InsertionPoint.3}.././", root)
 
-        args_digest = hashlib.sha256(f"model: {model}, target: {target}, root: {root}".encode("utf-8"))
+        args_digest = hashlib.sha256(f"model: {model}, target: {target}, root: {root}".encode())
 
         gen_info = [
             "\n"
@@ -72,7 +71,7 @@ class Exporter:
 
         return const_tips + gen_info + template
     
-    def parse_stdout(self, stdout: str) -> Dict[str, str | int]:
+    def parse_stdout(self, stdout: str) -> dict[str, str | int]:
         lines = stdout.split('\n')
         info = {}
         for line in lines:

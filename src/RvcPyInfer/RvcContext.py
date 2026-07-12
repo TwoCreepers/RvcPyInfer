@@ -1,16 +1,16 @@
 import warnings
 from pathlib import Path
-from typing import Tuple
 
-from .warn.InferEnvWarn import InferEnvWarn
-from .InferProviders import InferProviders
-from .onnx.ModelSimplePool import ModelSimplePool
-from .onnx.ContentVec import ContentVec
-from .onnx.RvcGen import RvcGen
 from .index.RvcFeatIndex import RvcFeatIndex
-from .type_alist import AudioLike, PathLike, F0ExtractAlgorithm
-from .path_utils import path
+from .InferProviders import InferProviders
 from .InferTask import InferTask
+from .onnx.ContentVec import ContentVec
+from .onnx.ModelSimplePool import ModelSimplePool
+from .onnx.RvcGen import RvcGen
+from .path_utils import path
+from .type_alist import AudioLike, F0ExtractAlgorithm, PathLike
+from .warn.InferEnvWarn import InferEnvWarn
+
 
 # 请注意，RvcContext 并不是线程安全的
 class RvcContext:
@@ -24,7 +24,7 @@ class RvcContext:
             lambda p: ContentVec(p.resolve(), self._providers),
             vec_pool_permanent_size
         )        
-        self._gen_pool = ModelSimplePool[Tuple[Path, int], RvcGen](
+        self._gen_pool = ModelSimplePool[tuple[Path, int], RvcGen](
             lambda args: RvcGen(args[0].resolve(), args[1], self._providers),
             gen_pool_permanent_size,
         )

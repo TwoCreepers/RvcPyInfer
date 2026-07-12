@@ -90,8 +90,8 @@ exclude = [
 select = [
     "E",  # pycodestyle 错误
     "F",  # pyflakes
-    #"I",  # isort
-    #"UP", # pyupgrade
+    "I",  # isort
+    "UP", # pyupgrade
 ]
 
 ignore = [

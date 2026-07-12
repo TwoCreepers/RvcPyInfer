@@ -1,24 +1,25 @@
-from typing import List, Tuple, Callable, TYPE_CHECKING
+from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import soundfile
 import numpy as np
+import soundfile
 from numpy.typing import NDArray
 
-from .type_alist import FileLike, Audio, AudioLike, F0ExtractAlgorithm, F0ExtractAlgorithmList
-from .f0_utils import build_f0extract_func, apply_rise_tone, f0_to_mel, normalized_mel
-from .audio.audio_utils import split_by_silence, split_by_max_len_with_overlap, crossfade, reSR, rms_frame_match
+from .audio.audio_utils import crossfade, reSR, rms_frame_match, split_by_max_len_with_overlap, split_by_silence
+from .f0_utils import apply_rise_tone, build_f0extract_func, f0_to_mel, normalized_mel
+from .type_alist import Audio, AudioLike, F0ExtractAlgorithm, F0ExtractAlgorithmList, FileLike
 
 if TYPE_CHECKING:
     from .RvcContext import RvcContext
 
 class InferTask:
-    audios: List[Audio]
+    audios: list[Audio]
     def __init__(self, 
             # -- 必填 --
             context: "RvcContext",
             vec_model: Path,
-            gen_model: Tuple[Path, int],
+            gen_model: tuple[Path, int],
             *audios: AudioLike,
 
             # 可选扩展
@@ -79,10 +80,10 @@ class InferTask:
     def read(self) -> None:
         self.audios = []
         for audio_like in self.audio_likes:
-            if isinstance(audio_like, Tuple) and len(audio_like) == 2 and isinstance(audio_like[0], np.ndarray) and isinstance(audio_like[1], int):
+            if isinstance(audio_like, tuple) and len(audio_like) == 2 and isinstance(audio_like[0], np.ndarray) and isinstance(audio_like[1], int):
                 self.audios.append(audio_like)
             else:
-                assert not isinstance(audio_like, Tuple) # 这个类型检查真的很奇怪有没有
+                assert not isinstance(audio_like, tuple) # 这个类型检查真的很奇怪有没有
                 data, sr = soundfile.read(
                     audio_like, dtype="float32"
                 )
@@ -158,7 +159,7 @@ class InferTask:
                 min_silence_duration_ms=self.silence_min_silence_duration_ms,
                 max_transition_ms=self.silence_max_transition_ms
             )
-            chunks: List[Audio] = []
+            chunks: list[Audio] = []
             for chunk, is_sil in splited:
                 if is_sil:
                     chunks.append(reSR(chunk, target_sr=self.gen[1])) # 内部判断相等会直接返回
@@ -175,7 +176,7 @@ class InferTask:
             )
             callback(i, res)
                 
-    def run(self) -> List[Audio]:
+    def run(self) -> list[Audio]:
         self.read()
 
         res = []

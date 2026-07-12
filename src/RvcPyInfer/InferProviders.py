@@ -1,7 +1,7 @@
-from typing import List
 from enum import Flag, auto
 
 from .error.InferEnvError import InferEnvError
+
 
 class InferProviders(Flag):
     NONE = auto() # 仅用于内部方便处理
@@ -27,7 +27,7 @@ class InferProviders(Flag):
     def is_ov(self) -> bool:
         return bool((InferProviders.OPENVINO_CPU | InferProviders.OPENVINO_GPU | InferProviders.OPENVINO_NPU | InferProviders.OPENVINO_AUTO) & self)
 
-    def get_onnx_provider(self) -> List[str]:
+    def get_onnx_provider(self) -> list[str]:
         res = []
         if self.FORCE_CUDA in self:
             res.append("CUDAExecutionProvider")
@@ -38,10 +38,10 @@ class InferProviders(Flag):
         return res
     
     def get_openvino_device(self) -> str:
-        devices: List[str] = []
+        devices: list[str] = []
         if self.OPENVINO_GPU in self:
             # 现场找全
-            from openvino import Core # pyright: ignore[reportMissingImports]
+            from openvino import Core  # pyright: ignore[reportMissingImports]
             devices.extend(filter(lambda name: name.startswith("GPU"), Core().available_devices))
         if self.OPENVINO_NPU in self:
             devices.append("NPU")
@@ -78,11 +78,11 @@ class InferProviders(Flag):
         
     @staticmethod
     def currently_available() -> "InferProviders":
-        from .infer_env import HAS_ONE, HAS_ORT, HAS_OPENVINO
+        from .infer_env import HAS_ONE, HAS_OPENVINO, HAS_ORT
         res = InferProviders.NONE
 
         if HAS_ORT:
-            import onnxruntime as ort # pyright: ignore[reportMissingImports]
+            import onnxruntime as ort  # pyright: ignore[reportMissingImports]
             available_providers = ort.get_available_providers()
             if "CPUExecutionProvider" in available_providers:
                 res = res | InferProviders.ORT_CPU
@@ -91,7 +91,7 @@ class InferProviders(Flag):
             if "DmlExecutionProvider" in available_providers:
                 res = res | InferProviders.FORCE_DML
         if HAS_OPENVINO:
-            from openvino import Core # pyright: ignore[reportMissingImports]
+            from openvino import Core  # pyright: ignore[reportMissingImports]
             devices = Core().available_devices
             res = res | InferProviders.OPENVINO_AUTO | InferProviders.OPENVINO_OPTIONAL_MULTI | InferProviders.OPENVINO_OPTIONAL_HETERO
             if "CPU" in devices:

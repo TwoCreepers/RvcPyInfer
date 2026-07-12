@@ -2,8 +2,9 @@ import argparse
 import sys
 from pathlib import Path
 
-from .Exporter import Exporter
 from .direct_read_sr import direct_read_sr
+from .Exporter import Exporter
+
 
 def export_command(args) -> None:
     """处理 export 子命令的具体逻辑"""

@@ -4,6 +4,7 @@ import sys
 from .InferProviders import InferProviders
 from .RvcContext import RvcContext
 
+
 def str_to_provider(provider_str: str) -> InferProviders:
     """将命令行字符串映射为 InferProviders 枚举"""
     if provider_str == "default":

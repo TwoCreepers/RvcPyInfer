@@ -1,28 +1,29 @@
 import warnings
 from pathlib import Path
-from typing import Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
-from ..warn.InferModelWarn import InferModelWarn
 from ..error.InferEnvError import InferEnvError
 from ..InferProviders import InferProviders
+from ..warn.InferModelWarn import InferModelWarn
 
 if TYPE_CHECKING:
-    from ..infer_env import HAS_ORT, HAS_OPENVINO
+    from ..infer_env import HAS_OPENVINO, HAS_ORT
     if HAS_ORT:
-        import onnxruntime as ort # pyright: ignore[reportMissingImports]
+        import onnxruntime as ort  # pyright: ignore[reportMissingImports]
     if HAS_OPENVINO:
-        import openvino # pyright: ignore[reportMissingImports]
+        import openvino  # pyright: ignore[reportMissingImports]
 
-def load_model(path: Path, providers: InferProviders) -> "Tuple[ort.InferenceSession | None, openvino.CompiledModel | None]": # pyright: ignore[reportAttributeAccessIssue]
+def load_model(path: Path, providers: InferProviders) -> "tuple[ort.InferenceSession | None, openvino.CompiledModel | None]": # pyright: ignore[reportAttributeAccessIssue]
     session = None
     compiled_model = None
     if providers.is_ort():
-            import onnxruntime as ort # pyright: ignore[reportMissingImports]
+            import onnxruntime as ort  # pyright: ignore[reportMissingImports]
             session = ort.InferenceSession(
                 path.with_suffix(".onnx"), providers=providers.get_onnx_provider()
             )
     elif providers.is_ov():
-        from openvino import save_model, convert_model # pyright: ignore[reportMissingImports]
+        from openvino import convert_model, save_model  # pyright: ignore[reportMissingImports]
+
         from ..ov.OVCoreSingleton import core
         if (path.parent / path.stem).with_suffix(".xml").exists():
             model = core.read_model(str((path.parent / path.stem).with_suffix(".xml").resolve()))

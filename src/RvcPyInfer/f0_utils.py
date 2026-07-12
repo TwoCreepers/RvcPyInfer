@@ -1,12 +1,14 @@
 import math
-from typing import Callable, overload
+from collections.abc import Callable
+from typing import overload
 
-import pyworld as pw
 import numpy as np
+import pyworld as pw
 from numpy.typing import NDArray
 
 from .error.NotSupportedAlgorithmError import NotSupportedAlgorithmError
 from .type_alist import Audio, F0ExtractAlgorithm
+
 
 def interpolate_f0[T: np.floating](f0: NDArray[T]) -> NDArray[T]:
     """

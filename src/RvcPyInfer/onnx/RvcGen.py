@@ -3,9 +3,10 @@ from numpy.typing import NDArray
 
 from ..error.InferEnvError import InferEnvError
 from ..InferProviders import InferProviders
-from ..type_alist import PathLike, Audio
 from ..path_utils import path as pathf
+from ..type_alist import Audio, PathLike
 from .model_loader import load_model
+
 
 class RvcGen:
     def __init__(self, path: PathLike, model_out_sr: int, providers: InferProviders) -> None:

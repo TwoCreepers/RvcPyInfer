@@ -1,8 +1,9 @@
 import numpy as np
 from numpy.typing import NDArray
 
-from ..type_alist import PathLike
 from ..path_utils import path
+from ..type_alist import PathLike
+
 
 class RvcFeatIndex:
     def __init__(self, index: PathLike) -> None:

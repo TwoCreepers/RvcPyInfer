@@ -1,11 +1,11 @@
-from typing import Literal, List, Tuple, Any
-
-import samplerate
+from typing import Any, Literal
 
 import numpy as np
+import samplerate
 from numpy.typing import NDArray
 
 from ..type_alist import Audio
+
 
 def reSR(orig: Audio, 
          target_sr: int, 
@@ -158,7 +158,7 @@ def split_by_silence(
     ref: float = 1.0,
     min_silence_duration_ms: float = 800.0,
     max_transition_ms: float = 50
-) -> List[Tuple[Audio, bool]]:
+) -> list[tuple[Audio, bool]]:
     """
     按静音切片，返回所有片段（含静音段）。
 
@@ -258,7 +258,7 @@ def split_by_max_len_with_overlap(
         *,
         max_len: int = 30,
         overlap_len: int = 5
-    ) -> List[Audio]:
+    ) -> list[Audio]:
     data, sr = audio
     max_size = sr * max_len
     
@@ -268,7 +268,7 @@ def split_by_max_len_with_overlap(
     overlap_size = sr * overlap_len
     step = max_size - overlap_size  # 每次向前推进的步长
 
-    res: List[Audio] = []
+    res: list[Audio] = []
     offset = 0
     
     while offset < len(data):
@@ -283,7 +283,7 @@ def split_by_max_len_with_overlap(
     return res
 
 def crossfade(
-        audios: List[Audio],
+        audios: list[Audio],
         *,
         overlap_len: int = 5
     ) -> Audio:
@@ -315,12 +315,12 @@ def crossfade(
 
     return np.concatenate(data_list), sr
 
-def copy_audio(audios: List[Audio]) -> List[Audio]:
+def copy_audio(audios: list[Audio]) -> list[Audio]:
     for i in range(1, len(audios)):
         audios[i] = (audios[i][0].copy(), audios[i][1])
     return audios
 
-def print_segments_info(segments: List[Tuple[Audio, bool]]) -> None:
+def print_segments_info(segments: list[tuple[Audio, bool]]) -> None:
     """
     打印切片结果的时间戳和静音标注。
     
