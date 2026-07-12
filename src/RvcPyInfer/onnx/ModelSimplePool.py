@@ -7,10 +7,10 @@ class ModelSimplePool[TKey, TModel]:
         self._pools = OrderedDict[TKey, TModel]()
         self._permanent_size = permanent_size
 
-    def remove(self, key: TKey):
+    def remove(self, key: TKey) -> None:
         del self._pools[key]
 
-    def clear(self):
+    def clear(self) -> None:
         self._pools.clear()
 
     def get(self, key: TKey) -> TModel:

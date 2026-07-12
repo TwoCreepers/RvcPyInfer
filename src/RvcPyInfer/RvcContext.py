@@ -38,7 +38,7 @@ class RvcContext:
         else:
             self._index_pool = None
 
-    def clear_pool(self):
+    def clear_pool(self) -> None:
         self._vec_pool.clear()
         self._gen_pool.clear()
 

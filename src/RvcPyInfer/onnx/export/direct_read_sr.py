@@ -3,6 +3,8 @@ import io
 import pickle
 import zipfile
 
+from typing import Any
+
 from ...type_alist import PathLike
 
 class DroppedObject:
@@ -12,23 +14,23 @@ class DroppedObject:
     """
     _instance = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Any, **kwargs: Any) -> "DroppedObject":
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         # 吸收所有 pickle 传入的构造参数
         pass
     
-    def __setstate__(self, state):
+    def __setstate__(self, state: Any) -> None:
         # 吸收所有 pickle 传入的属性状态
         pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<DroppedObject>"
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         # 方便在 if 判断中识别：if val is DROPPED: ...
         return False
     
@@ -51,21 +53,21 @@ class SafeStandardUnpickler(pickle.Unpickler):
         },
     }
 
-    def find_class(self, module, name):
+    def find_class(self, module: str, name: str):
         if module in self.SAFE_CLASSES and name in self.SAFE_CLASSES[module]:
             return self.SAFE_CLASSES[module][name]
         
         # 静默丢弃：返回哨兵类，不抛出异常
         return DroppedObject
     
-    def persistent_load(self, pid):
+    def persistent_load(self, pid: Any) -> DroppedObject:
         """
         PyTorch 用 persistent_id 机制存储 tensor 的 storage。
         我们不需要 tensor 数据，直接返回哨兵值。
         """
         return DroppedObject()
     
-def safe_load_pth(filepath: PathLike):
+def safe_load_pth(filepath: PathLike) -> Any:
     """
     安全加载 PyTorch .pth/.pt 文件。
     自动处理 ZIP 格式（PyTorch 1.6+）和旧版原始 pickle 格式。

@@ -1,4 +1,4 @@
-from typing import Literal, List, Tuple
+from typing import Literal, List, Tuple, Any
 
 import samplerate
 
@@ -15,12 +15,12 @@ def reSR(orig: Audio,
     if target_sr == orig_sr:
         target_data = orig_data
     else:
-        target_data: NDArray = samplerate.resample(orig_data, ratio, algorithm)
+        target_data: NDArray[Any] = samplerate.resample(orig_data, ratio, algorithm)
         assert isinstance(target_data, np.ndarray), "这库不对吧？返回值不是 ndarray"
     target_data = target_data.astype(np.float32)
     return target_data, target_sr
 
-def frame_rms(audio: Audio, frame_len = 20, hop_len = 10) -> NDArray[np.float32]:
+def frame_rms(audio: Audio, frame_len: int = 20, hop_len: int = 10) -> NDArray[np.float32]:
     """
     分帧计算RMS能量
     

@@ -24,7 +24,7 @@ import sys
 if Root is not None:
     sys.path.insert(0, Root)
 
-def set_hook():
+def set_hook() -> None:
     import infer.lib.infer_pack.attentions as attentions # pyright: ignore[reportMissingImports]
 
     def attention_fix(

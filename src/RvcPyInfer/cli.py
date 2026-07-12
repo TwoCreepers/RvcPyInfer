@@ -23,7 +23,7 @@ def str_to_provider(provider_str: str) -> InferProviders:
     else:
         raise ValueError(f"未知的 Provider: {provider_str}")
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="RVC 语音转换命令行工具")
     
     # --- 必填参数 ---

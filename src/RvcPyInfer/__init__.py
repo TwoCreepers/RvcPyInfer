@@ -1,3 +1,5 @@
+# pyright: reportUnusedImport=false
+
 from .type_alist import Audio, AudioLike, PathLike, FileLike, F0ExtractAlgorithm, F0ExtractAlgorithmList
 from .error.InferEnvError import InferEnvError
 from .error.NotSupportedAlgorithmError import NotSupportedAlgorithmError

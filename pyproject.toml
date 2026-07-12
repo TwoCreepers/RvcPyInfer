@@ -46,6 +46,11 @@ openvino = [
 index = [
     "faiss-cpu>=1.14.3",
 ]
+dev = [
+    "mypy>=2.2.0",
+    "pyright>=1.1.411",
+    "ruff>=0.15.21",
+]
 
 [tool.uv]
 conflicts = [   # 这几个是互斥的，防止 uv 傻乎乎地全装上了
@@ -55,3 +60,49 @@ conflicts = [   # 这几个是互斥的，防止 uv 傻乎乎地全装上了
         { extra = "dml" }
     ],
 ]
+
+
+[tool.pyright]
+include = ["src"]
+exclude = ["**/node_modules", "**/__pycache__", ".venv", "**/.*", "src/RvcPyInfer/resource/**/.*"]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "basic"
+reportMissingTypeStubs = "none"
+reportUnknownMemberType = "none"
+reportUnusedImport = "warning"
+reportMissingImports = "error"
+
+[tool.ruff]
+line-length = 180
+target-version = "py313"
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "src/RvcPyInfer/resource/"
+]
+
+[tool.ruff.lint]
+# 启用的规则集
+select = [
+    "E",  # pycodestyle 错误
+    "F",  # pyflakes
+    "I",  # isort
+    "UP", # pyupgrade
+]
+
+ignore = [
+    "E501",  # 行太长，信任格式化工具
+]
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

@@ -5,7 +5,7 @@ from pathlib import Path
 from .Exporter import Exporter
 from .direct_read_sr import direct_read_sr
 
-def export_command(args):
+def export_command(args) -> None:
     """处理 export 子命令的具体逻辑"""
     root_path = Path(args.root).resolve()
     model_path = Path(args.model).resolve()
@@ -49,7 +49,7 @@ def export_command(args):
         traceback.print_exc()
         sys.exit(1)
 
-def show_sr_command(args):
+def show_sr_command(args) -> None:
     """处理 show-sr 子命令的具体逻辑"""
     model_path = Path(args.model).resolve()
 
@@ -60,7 +60,7 @@ def show_sr_command(args):
     sr = direct_read_sr(model_path)
     print(f"模型采样率是: {sr}")
 
-def main():
+def main() -> None:
     # 主解析器
     parser = argparse.ArgumentParser(
         description="RvcPyInfer 命令行工具",

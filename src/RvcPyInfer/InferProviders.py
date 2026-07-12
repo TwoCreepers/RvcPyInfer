@@ -38,7 +38,7 @@ class InferProviders(Flag):
         return res
     
     def get_openvino_device(self) -> str:
-        devices = []
+        devices: List[str] = []
         if self.OPENVINO_GPU in self:
             # 现场找全
             from openvino import Core # pyright: ignore[reportMissingImports]
