@@ -7,7 +7,7 @@ from ..type_alist import PathLike
 
 class RvcFeatIndex:
     def __init__(self, index: PathLike) -> None:
-        import faiss # pyright: ignore[reportMissingImports]
+        import faiss  # pyright: ignore[reportMissingImports]
         self.faiss_index = faiss.read_index(str(path(index).resolve()))
         self.faiss_data: NDArray = self.faiss_index.reconstruct_n(0, self.faiss_index.ntotal)
 
