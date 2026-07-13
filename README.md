@@ -2,6 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://mit-license.org/)  
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)  
+![PyPI Version](https://img.shields.io/pypi/v/RvcPyInfer)
 ![ONNX](https://img.shields.io/badge/ONNX-supported-blue)
 
 [RVC](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI) 的 ONNX 模型导出格式推理实现。  
@@ -16,31 +17,15 @@
 ~~并且推理真的很难测试欸。~~
 
 ## 安装
-本库尚未上传至 [PyPI](https://pypi.org) ，我们还在筹备这方面的工作。  
-你可以直接 clone 该仓库然后使用如下命令构建 `.whl` 文件。
+本库已上传至 [PyPI](https://pypi.org/project/RvcPyInfer/)，你可以直接使用我们构建好的轮子。  
+`pip` 安装示例：  
 ```shell
-# 克隆该仓库
-git clone https://github.com/TwoCreepers/RvcPyInfer.git
-# 进入该仓库目录
-cd RvcPyInfer
-# 使用 uv 构建
-uv build
-# 安装生成的 wheel 包 (以实际文件名为准)
-pip install ./dist/rvcpyinfer-0.1.0-py3-none-any.whl
+pip install RvcPyInfer[cpu]
 ```
-不出意外的话，现在你需要的轮子文件应该出现在 `dist/` 下面了。  
-这里出现的 [`uv`](https://github.com/astral-sh/uv) 是一个使用 `Rust` 编写的 `Python` 项目管理工具。  
-它可以为你剩下非常多在依赖管理方面的麻烦，就比如上面的 `uv build` 它会自动为你生成虚拟环境并安装好依赖。  
-当然了， [`uv`](https://github.com/astral-sh/uv) 不是必须的，我们使用 [`hatchling`](https://pypi.org/project/hatchling) 作为构建后端，你可以自己研究一下如何构建。  
-
-或者你也可以直接把当前项目作为库安装，例如：
+使用 `uv` 添加到项目依赖示例：  
 ```shell
-# 假设你已经在仓库目录里了
-pip install .
-# 如果需要安装 CPU 引擎和特征索引支持的话是
-pip install ".[cpu,index]"
+uv add RvcPyInfer[cpu]
 ```
-
 
 ## 关于特征模型
 你可以在[这里](https://huggingface.co/NaruseMioShirakana/MoeSS-SUBModel/tree/main)找到 `MoeSS` 使用的 `onnx` 特征模型。它们是通用的。  
@@ -49,10 +34,9 @@ pip install ".[cpu,index]"
 ## 关于推理引擎
 你可能已经看到了那个未安装任何推理引擎的警告或者错误。  
 请在安装命令后面添加 `[xxx]` 来安装可选依赖。  
-例如：
+例如：  
 ```shell
-# 假设你已经在 dist/ 目录下构建好了 whl 文件
-pip install "./dist/rvcpyinfer-0.1.0-py3-none-any[cpu]"
+pip install RvcPyInfer[dml]
 ```
 目前我们支持以下推理引擎：
 
@@ -69,6 +53,10 @@ pip install "./dist/rvcpyinfer-0.1.0-py3-none-any[cpu]"
 ## 关于特征索引
 原项目的 `.index` 文件可直接使用，无需转换。  
 但你需要使用 `[index]` 来安装我们需要用于读取特征索引的依赖—— `faiss`。  
+例如同时安装特征索引支持和 `CPU`：  
+```shell
+pip install RvcPyInfer[cpu,index]
+```
 
 ## 快速使用
 一个简单的示例：
@@ -114,8 +102,7 @@ task.run_and_save(
 格式： `rvc-model export -m <你的pth模型路径> -t <你希望输出到哪> -r <rvc 原项目的根路径> --runtime <可选的导出用的 python 解释器路径，默认使用 rvc 原项目整合包自带的解释器>`  
 
 ## 未来的计划
-- [ ] Github Action 可重现性构建流水线  
-- [ ] 发布至 PyPI  
+暂无，欢迎各位提出 issue  
 
 ## 许可证
 在文件头部或文件所在目录未有额外说明的情况下，本项目代码部分使用 [`MIT`](https://mit-license.org/) 许可证授权与你，非代码部分使用 `CC BY 4.0` 授权与你。  
