@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v*"
 
 jobs:
   check:
@@ -18,7 +18,7 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --extra dev --frozen
 
       - name: Run ruff lint
         run: uv run ruff check
