@@ -2,8 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://mit-license.org/)  
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)  
-![PyPI Version](https://img.shields.io/pypi/v/RvcPyInfer)
-![ONNX](https://img.shields.io/badge/ONNX-supported-blue)
+![PyPI Version](https://img.shields.io/pypi/v/RvcPyInfer)  
+![ONNX](https://img.shields.io/badge/ONNX-supported-blue)  
 
 [RVC](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI) 的 ONNX 模型导出格式推理实现。  
 
