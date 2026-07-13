@@ -37,8 +37,8 @@ Homepage = "https://github.com/TwoCreepers/RvcPyInfer"
 Repository = "https://github.com/TwoCreepers/RvcPyInfer"
 
 [project.scripts]
-rvc-infer = "RvcPyInfer.onnx.export.cli:main"
-rvc-model = "RvcPyInfer.__main__:export_main"
+rvc-model = "RvcPyInfer.onnx.export.cli:main"
+rvc-infer = "RvcPyInfer.__main__:infer_main"
 
 # 构建系统
 [build-system]
@@ -74,6 +74,11 @@ conflicts = [   # 这几个是互斥的，防止 uv 傻乎乎地全装上了
         { extra = "cuda" },
         { extra = "dml" }
     ],
+]
+
+[tool.uv.workspace]
+members = [
+    "testEnv",
 ]
 
 [tool.pyright]
