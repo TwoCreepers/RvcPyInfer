@@ -7,9 +7,9 @@ from .error.NotSupportedAlgorithmError import NotSupportedAlgorithmError
 from .InferProviders import InferProviders
 from .InferTask import InferTask
 from .onnx.ContentVec import ContentVec
-from .onnx.export import Exporter as OnnxExporter
-from .onnx.export.cli import main as ModelExportToolCLI
-from .onnx.export.direct_read_sr import direct_read_sr
+from .onnx.model import Exporter as OnnxExporter
+from .onnx.model.direct_read_sr import direct_read_sr
+from .onnx.model.cli import main as ModelExportToolCLI
 from .onnx.ModelSimplePool import ModelSimplePool
 from .onnx.RvcGen import RvcGen
 from .RvcContext import RvcContext
