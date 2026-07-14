@@ -37,7 +37,7 @@ Homepage = "https://github.com/TwoCreepers/RvcPyInfer"
 Repository = "https://github.com/TwoCreepers/RvcPyInfer"
 
 [project.scripts]
-rvc-model = "RvcPyInfer.onnx.export.cli:main"
+rvc-model = "RvcPyInfer.onnx.model.cli:main"
 rvc-infer = "RvcPyInfer.__main__:infer_main"
 
 # 构建系统
@@ -65,6 +65,10 @@ index = [
 dev = [
     "pyright>=1.1.411",
     "ruff>=0.15.21",
+]
+optimize = [
+    "onnx>=1.22.0",
+    "onnxsim>=0.6.5",
 ]
 
 [tool.uv]

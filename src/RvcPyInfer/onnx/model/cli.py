@@ -61,6 +61,37 @@ def show_sr_command(args) -> None:
     sr = direct_read_sr(model_path)
     print(f"模型采样率是: {sr}")
 
+def optimize_command(args) -> None:
+    """处理 optimize 子命令的具体逻辑"""
+    model_path = Path(args.model).resolve()
+    target_path = Path(args.target).resolve()
+    is_static_batch = not args.disable_static_batch
+    is_print_result = not args.disable_print_result
+
+    if not model_path.is_file():
+        print(f"[错误] 找不到模型文件: {model_path}")
+        sys.exit(1)
+
+    # 确保输出目录存在
+    if not target_path.parent.exists():
+        print(f"[提示] 创建输出目录: {target_path.parent}")
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        from .Optimizer import Optimizer
+        optimizer = Optimizer(model_path)
+        optimizer.simplify(target_path, is_static_batch, is_print_result)
+    except ImportError as e:
+        print(f"\n[错误] 这可能是因为你未安装 [optimize] 可选依赖: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n[错误] 导出过程中发生未预期的异常: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+    
 def main() -> None:
     # 主解析器
     parser = argparse.ArgumentParser(
@@ -93,6 +124,24 @@ def main() -> None:
     )
     show_sr_parser.add_argument("-m", "--model", type=str, required=True, help="输入的 RVC 模型路径")
     show_sr_parser.set_defaults(func=show_sr_command)
+
+    # 按需注册 optimize 子命令
+    try:
+        import onnx  # pyright: ignore[reportMissingImports,reportUnusedImport] # noqa: F401
+        from onnxsim import simplify  # pyright: ignore[reportMissingImports,reportUnusedImport] # noqa: F401
+
+        optimize_parser = subparsers.add_parser(
+            "optimize",
+            help="优化 ONNX 模型",
+            description="通过固定批大小、常量折叠、算子融合等方式减少算子数量，提高运行效率"
+        )
+        optimize_parser.add_argument("-m", "--model", type=str, required=True, help="输入的 ONNX 模型路径")
+        optimize_parser.add_argument("-t", "--target", type=str, required=True, help="简化的 ONNX 模型目标路径")
+        optimize_parser.add_argument("-dsb", "--disable-static-batch", action="store_true", required=False, help="是否禁用静态批大小优化")
+        optimize_parser.add_argument("-dpr", "--disable-print-result", action="store_true", required=False, help="是否禁用打印优化结果")
+        optimize_parser.set_defaults(func=optimize_command)
+    except ImportError:
+        ...
 
     # 解析参数
     args = parser.parse_args()

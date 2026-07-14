@@ -7,9 +7,10 @@ from .error.NotSupportedAlgorithmError import NotSupportedAlgorithmError
 from .InferProviders import InferProviders
 from .InferTask import InferTask
 from .onnx.ContentVec import ContentVec
-from .onnx.model import Exporter as OnnxExporter
-from .onnx.model.direct_read_sr import direct_read_sr
 from .onnx.model.cli import main as ModelExportToolCLI
+from .onnx.model.direct_read_sr import direct_read_sr
+from .onnx.model.Exporter import Exporter as OnnxExporter
+from .onnx.model.Optimizer import Optimizer as OnnxOptimizer
 from .onnx.ModelSimplePool import ModelSimplePool
 from .onnx.RvcGen import RvcGen
 from .RvcContext import RvcContext
@@ -33,6 +34,7 @@ __all__ = [
     "RvcContext",
     "InferTask",
     "OnnxExporter",
+    "OnnxOptimizer",
     "direct_read_sr",
     "ModelExportToolCLI",
     "ContentVec",
