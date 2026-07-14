@@ -97,7 +97,7 @@ task.run_and_save(
 格式： `rvc-model show-sr -m <你的pth模型路径>`  
 
 #### rvc-model export
-导出 ONNX 模型
+导出 ONNX 模型  
 **⚠️注意：你必须安装原项目的整合包或至少有一个能运行原项目的环境以便 `PyTorch` 导出 `.onnx` 模型。**  
 它并不依赖项目内置的 `tools/export_onnx.py` 我们有自己的方法。  
 ~~事实上原项目的 export_onnx.py 甚至没有做 v2 版本的支持~~  
