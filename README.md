@@ -90,7 +90,7 @@ task.run_and_save(
 **Tips：可出现多个 -i 和 -o，只要它们的数量一致，多个 -i 和 -o 按出现顺序一一对应。**
 
 ### rvc-model
-该命令用于查看原项目的 `.pth` 模型的生成采样率，以及在 `Windows` 上快速导出 onnx 模型。
+该命令用于查看原项目的 `.pth` 模型的生成采样率，和在 `Windows` 上快速导出 onnx 模型，以及优化导出的 onnx 模型。
 
 #### rvc-model show-sr
 安全地查看原项目的 `.pth` 模型的采样率  
