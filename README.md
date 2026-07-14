@@ -106,7 +106,7 @@ task.run_and_save(
 #### rvc-model optimize
 优化导出的 ONNX 模型  
 **⚠️注意：你必须安装 [optimize] 可选依赖，否则该子命令将不会出现在 `-h` 输出上**  
-格式： `rvc-model optimize -m <你的pth模型路径> -t <你希望输出到哪>`  
+格式： `rvc-model optimize -m <你的 onnx 模型路径> -t <你希望输出到哪>`  
 
 ## 未来的计划
 暂无，欢迎各位提出 issue  
