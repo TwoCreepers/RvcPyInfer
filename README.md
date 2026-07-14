@@ -83,7 +83,7 @@ task.run_and_save(
 我们已经预制了一些 `CLI` 在库中了，并随库一并打包。  
 以下是库内置的命令：  
 - `rvc-infer`：用以快速推理模型而无需编写代码
-- `rvc-model`：与原项目模型相关的命令
+- `rvc-model`：与模型相关的命令
 
 ### rvc-infer
 最简格式： `rvc-infer --vec-model <你的特征模型路径> --gen-model <你的生成器模型路径> --gen-model-sr <你的生成器模型的输出采样率> -i <输入音频文件路径> -o <输出音频文件路径>`  
@@ -93,13 +93,20 @@ task.run_and_save(
 该命令用于查看原项目的 `.pth` 模型的生成采样率，以及在 `Windows` 上快速导出 onnx 模型。
 
 #### rvc-model show-sr
-格式： `rvc-model show-sr -m <你的pth模型路径>`
+安全地查看原项目的 `.pth` 模型的采样率  
+格式： `rvc-model show-sr -m <你的pth模型路径>`  
 
 #### rvc-model export
+导出 ONNX 模型
 **⚠️注意：你必须安装原项目的整合包或至少有一个能运行原项目的环境以便 `PyTorch` 导出 `.onnx` 模型。**  
 它并不依赖项目内置的 `tools/export_onnx.py` 我们有自己的方法。  
 ~~事实上原项目的 export_onnx.py 甚至没有做 v2 版本的支持~~  
 格式： `rvc-model export -m <你的pth模型路径> -t <你希望输出到哪> -r <rvc 原项目的根路径> --runtime <可选的导出用的 python 解释器路径，默认使用 rvc 原项目整合包自带的解释器>`  
+
+#### rvc-model optimize
+优化导出的 ONNX 模型  
+**⚠️注意：你必须安装 [optimize] 可选依赖，否则该子命令将不会出现在 `-h` 输出上**  
+格式： `rvc-model optimize -m <你的pth模型路径> -t <你希望输出到哪>`  
 
 ## 未来的计划
 暂无，欢迎各位提出 issue  
