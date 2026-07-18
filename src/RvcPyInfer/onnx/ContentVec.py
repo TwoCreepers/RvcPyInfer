@@ -35,4 +35,4 @@ class ContentVec:
         else:
             raise InferEnvError("没有任意一个支持的推理引擎，请至少安装一个可选模块")
         # (1, frames, embed_size)
-        return np.repeat(logits, 2, axis=1).squeeze(axis=0).astype(np.float32) # 因为模型帧长为 320, 这里复制一份到 160
+        return logits.squeeze(axis=0).astype(np.float32)

@@ -99,7 +99,7 @@ class InferTask:
         model = self.context._vec_pool.get(self.vec)
         feats = model.infer(audio)
 
-        f0 = f0extract_func(audio, feats.shape[0]) # 这里是没有批处理维度的
+        f0 = f0extract_func(audio, feats.shape[0] * 2) # 这里是没有批处理维度的
         f0 = apply_rise_tone(f0, self.f0_up_semitone)
 
         mel = normalized_mel(f0_to_mel(f0), f0_to_mel(self.f0_min), f0_to_mel(self.f0_max))
@@ -108,6 +108,8 @@ class InferTask:
         if self.index_rate > 1e-6 and self.index_path is not None and self.context._index_pool is not None:
             index = self.context._index_pool.get(self.index_path)
             feats = index.apply_index(feats, self.index_rate, self.index_k)
+        
+        feats = np.repeat(feats, 2, axis=0) # 模型需要 160 帧移，但这里输出是 320 的
 
         model = self.context._gen_pool.get(self.gen)
         res = model.infer(
