@@ -53,6 +53,7 @@ def rms_frame_match(source: Audio,
                     frame_len: int = 20,
                     hop_len: int = 10,
                     mix: float = 1.0,
+                    gain_clip: float = 5.0,
                     eps: float = 1e-8) -> Audio:
     """
     将 source 的逐帧 RMS 包络匹配到 target。
@@ -63,6 +64,7 @@ def rms_frame_match(source: Audio,
         frame_len: 帧长度(ms)
         hop_len:   帧移(ms)
         mix:       匹配系数，0.0=直接输出源音频，1.0=完全匹配目标RMS
+        gain_clip: 增益系数钳位，范围 [1/gain_clip, gain_clip]
         eps:       防除零，和检测 mix 是否为0
 
     返回:
@@ -99,6 +101,7 @@ def rms_frame_match(source: Audio,
     # ---- 2. 逐帧增益 + 匹配系数混合 ----
     gain = tgt_rms / (src_rms + eps)
     gain = 1.0 + mix * (gain - 1.0)
+    gain = np.clip(gain, 1 / gain_clip, gain_clip)
 
     # ---- 3. 增益曲线平滑（边缘延伸 padding，无边界失真）----
     gain = _smooth_gain(gain)

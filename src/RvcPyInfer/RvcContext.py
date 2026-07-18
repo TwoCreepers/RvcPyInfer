@@ -79,6 +79,7 @@ class RvcContext:
             rms_match_frame_len: int = 20,
             rms_match_hop_len: int = 10,
             rms_match_mix: float = 1.0, # 一般不用改
+            rms_gain_clip: float = 5.0,
             ) -> "InferTask":
         vec = path(vec_model)
         gen = path(gen_model)
@@ -122,4 +123,5 @@ class RvcContext:
             rms_match_frame_len=rms_match_frame_len,
             rms_match_hop_len=rms_match_hop_len,
             rms_match_mix=rms_match_mix,
+            rms_gain_clip=rms_gain_clip,
         )

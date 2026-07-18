@@ -52,6 +52,7 @@ class InferTask:
             rms_match_frame_len: int = 20,
             rms_match_hop_len: int = 10,
             rms_match_mix: float = 1.0, # 一般不用改
+            rms_gain_clip: float = 5.0, # 用来解决原音频底噪造成的伪 rms 包络问题
             ) -> None:
         self.context = context
         self.vec = vec_model.resolve()
@@ -76,6 +77,7 @@ class InferTask:
         self.rms_match_frame_len = rms_match_frame_len
         self.rms_match_hop_len = rms_match_hop_len
         self.rms_match_mix = rms_match_mix
+        self.rms_gain_clip = rms_gain_clip
 
     def read(self) -> None:
         self.audios = []
@@ -172,7 +174,8 @@ class InferTask:
                 target=reSR(audio, target_sr=res[1]),
                 frame_len=self.rms_match_frame_len,
                 hop_len=self.rms_match_hop_len,
-                mix=self.rms_match_mix
+                mix=self.rms_match_mix,
+                gain_clip=self.rms_gain_clip
             )
             callback(i, res)
                 

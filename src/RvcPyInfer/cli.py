@@ -49,7 +49,7 @@ def main() -> None:
     parser.add_argument("--index-k", type=int, default=8, help="检索的最近特征数量")
     
     # --- f0 提取 ---
-    parser.add_argument("--f0-method", type=str, default="dio", help="f0 提取算法 (如 dio, pm, rmvpe, fcpe 等)")
+    parser.add_argument("--f0-method", type=str, default="dio", help="f0 提取算法 (如 dio, harvest 等)")
     parser.add_argument("--pitch", type=float, default=0, help="升降调 (半音)")
     parser.add_argument("--f0-min", type=float, default=50, help="最低 f0")
     parser.add_argument("--f0-max", type=float, default=1100, help="最高 f0")
@@ -62,6 +62,10 @@ def main() -> None:
     parser.add_argument("--silence-thresh-db", type=float, default=-40, help="静音阈值")
     parser.add_argument("--silence-min-duration", type=float, default=800.0, help="最小静音时长")
     parser.add_argument("--silence-max-transition", type=float, default=100.0, help="最大过渡时长")
+
+    # --- RMS 包络匹配 ---
+    parser.add_argument("--rms-match-mix", type=float, default=1.0, help="RMS 包络匹配率")
+    parser.add_argument("--rms-gain-clip", type=float, default=5.0, help="RMS 包络增益钳位")
     
     args = parser.parse_args()
 
@@ -97,6 +101,8 @@ def main() -> None:
             silence_thresh_db=args.silence_thresh_db,
             silence_min_silence_duration_ms=args.silence_min_duration,
             silence_max_transition_ms=args.silence_max_transition,
+            rms_match_mix=args.rms_match_mix,
+            rms_gain_clip=args.rms_gain_clip,
         )
         
         # 3. 执行推理并保存
