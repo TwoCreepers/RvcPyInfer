@@ -97,7 +97,7 @@ task.run_and_save(
 
 ### index_consonant_protect: float = 0.66
 对清音的原始特征进行保护，不受特征索引影响的比例，与原项目的 `protect` 参数对应，关系为 `consonant_protect=1-protect`。  
-**对于小于 `0.5` 的值将直接跳过处理。**
+**对于小于 `0.5` 的值将直接跳过处理。**  
 **推荐范围: [0.0, 1.0]**
 
 ### f0_median_filter_win_size: int = -1
