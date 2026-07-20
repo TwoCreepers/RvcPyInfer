@@ -63,6 +63,7 @@ class RvcContext:
             f0_up_semitone: float = 0,
             f0_min: float = 50,
             f0_max: float = 1100,
+            f0_median_filter_win_size: int = -1, # 小于 3 静默关闭
 
             # -- 强制切片与交叉淡化 --
             slice_max_len: int = 30,
@@ -98,6 +99,10 @@ class RvcContext:
                 index_path = path(index_path)
                 if not index_path.exists():
                     raise FileNotFoundError(f"找不到特征索引: {index_path}")
+                
+        if f0_median_filter_win_size >= 3: # 启用条件
+            if f0_median_filter_win_size % 2 == 0: 
+                raise ValueError(f"基频中值滤波窗口大小必须是奇数: {f0_median_filter_win_size}")
 
         return InferTask(
             self,

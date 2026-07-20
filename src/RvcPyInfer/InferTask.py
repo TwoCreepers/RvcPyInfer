@@ -7,7 +7,7 @@ import soundfile
 from numpy.typing import NDArray
 
 from .audio.audio_utils import crossfade, reSR, rms_frame_match, split_by_max_len_with_overlap, split_by_silence
-from .f0_utils import apply_rise_tone, build_f0extract_func, f0_to_mel, normalized_mel
+from .f0_utils import apply_rise_tone, build_f0extract_func, f0_to_mel, median_filter, normalized_mel
 from .type_alist import Audio, AudioLike, F0ExtractAlgorithm, F0ExtractAlgorithmList, FileLike
 
 if TYPE_CHECKING:
@@ -36,6 +36,7 @@ class InferTask:
             f0_up_semitone: float = 0,
             f0_min: float = 50,
             f0_max: float = 1100,
+            f0_median_filter_win_size: int = -1, # 小于 3 静默关闭
 
             # -- 强制切片与交叉淡化 --
             slice_max_len: int = 30,
@@ -67,6 +68,7 @@ class InferTask:
         self.f0_up_semitone = f0_up_semitone
         self.f0_min = f0_min
         self.f0_max = f0_max
+        self.f0_median_filter_win_size = f0_median_filter_win_size
         self.slice_max_len = slice_max_len
         self.slice_overlap_len = slice_overlap_len
         self.silence_frame_len = silence_frame_len
@@ -100,6 +102,8 @@ class InferTask:
         feats = model.infer(audio)
 
         f0 = f0extract_func(audio, feats.shape[0] * 2) # 这里是没有批处理维度的
+        if self.f0_median_filter_win_size >= 3:
+            f0 = median_filter(f0, self.f0_median_filter_win_size)
         f0 = apply_rise_tone(f0, self.f0_up_semitone)
 
         mel = normalized_mel(f0_to_mel(f0), f0_to_mel(self.f0_min), f0_to_mel(self.f0_max))
@@ -109,7 +113,7 @@ class InferTask:
             index = self.context._index_pool.get(self.index_path)
             feats = index.apply_index(feats, self.index_rate, self.index_k)
         
-        feats = np.repeat(feats, 2, axis=0) # 模型需要 160 帧移，但这里输出是 320 的
+        feats = np.repeat(feats, 2, axis=0) # 模型需要 160 帧移，但这里特征输出是 320 的
 
         model = self.context._gen_pool.get(self.gen)
         res = model.infer(

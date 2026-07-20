@@ -123,3 +123,26 @@ def normalized_mel[T: np.floating](mel: NDArray[T], mel_min: float = f0_to_mel(5
     ) + 1.0
     mel = np.clip(mel, 1, 255)
     return mel
+
+def median_filter[T: np.floating](
+    signal: np.ndarray[tuple[int], np.dtype[T]],
+    window_size: int = 3,
+) -> np.ndarray[tuple[int], np.dtype[T]]:
+    if window_size % 2 == 0:
+        raise ValueError(f"窗口大小必须是奇数: {window_size}")
+    if window_size < 1:
+        raise ValueError(f"窗口大小必须大于 0: {window_size}")
+    if window_size == 1:
+        return signal.copy()
+    
+    pad_width: int = window_size // 2
+    padded: NDArray[T] = np.pad(signal, pad_width, mode='reflect')
+
+    # 生成窗口数组
+    windows: NDArray[T] = np.lib.stride_tricks.sliding_window_view(
+        padded, window_size
+    )
+    # 取中位数
+    result: NDArray[T] = np.median(windows, axis=1)
+
+    return result

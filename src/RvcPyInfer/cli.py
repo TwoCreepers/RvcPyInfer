@@ -53,6 +53,7 @@ def main() -> None:
     parser.add_argument("--pitch", type=float, default=0, help="升降调 (半音)")
     parser.add_argument("--f0-min", type=float, default=50, help="最低 f0")
     parser.add_argument("--f0-max", type=float, default=1100, help="最高 f0")
+    parser.add_argument("--f0-median-filter-win-size", type=int, default=-1, help="基频中值滤波窗口大小，小于3关闭，不可为偶数")
     
     # --- 强制切片与交叉淡化 ---
     parser.add_argument("--slice-max-len", type=int, default=30, help="最大切片长度 (秒)")
@@ -96,6 +97,7 @@ def main() -> None:
             f0_up_semitone=args.pitch,
             f0_min=args.f0_min,
             f0_max=args.f0_max,
+            f0_median_filter_win_size=args.f0_median_filter_win_size,
             slice_max_len=args.slice_max_len,
             slice_overlap_len=args.slice_overlap_len,
             silence_thresh_db=args.silence_thresh_db,

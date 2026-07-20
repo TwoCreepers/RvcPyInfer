@@ -16,4 +16,5 @@ class RvcFeatIndex:
         weight = np.square(1 / score)
         weight /= weight.sum(axis=1, keepdims=True)
         index_feats = np.sum(self.faiss_data[ix] * np.expand_dims(weight, axis=2), axis=1)
-        return index_feats * index_rate + (1 - index_rate) * feats
+        mix_feats = index_feats * index_rate + (1 - index_rate) * feats
+        return mix_feats.astype(np.float32) # 与 float64（python的float） 相乘会提高精度，这里要 astype 回来
