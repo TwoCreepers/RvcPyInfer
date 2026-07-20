@@ -46,8 +46,7 @@ def dio(audio: Audio,
         sr
     )
     assert isinstance(f0, np.ndarray) and isinstance(t, np.ndarray), "pyworld 输出类型应是 NDArray" # 给类型注解看的
-    f0, t = f0.astype(np.float32), t.astype(np.float32)
-    f0 = np.round(f0, 1) # 不知道，但原项目就是这么做了，我只是一个做 onnx 推理的我怎么知道为什么要这样做
+    f0 = f0.astype(np.float32)
     # 一般来说不太可能会发生长度不匹配的情况，但防御性编程
     pad_len = p_len - len(f0)
     if pad_len == 0:
@@ -78,7 +77,7 @@ def harvest(audio: Audio,
         sr
     )
     assert isinstance(f0, np.ndarray) and isinstance(t, np.ndarray), "pyworld 输出类型应是 NDArray" # 给类型注解看的
-    f0, t = f0.astype(np.float32), t.astype(np.float32)
+    f0 = f0.astype(np.float32)
     # 一般来说不太可能会发生长度不匹配的情况，但防御性编程
     pad_len = p_len - len(f0)
     if pad_len == 0:
