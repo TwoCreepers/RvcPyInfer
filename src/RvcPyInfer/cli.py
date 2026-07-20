@@ -47,6 +47,7 @@ def main() -> None:
     parser.add_argument("--index-path", type=str, default=None, help="特征索引文件路径")
     parser.add_argument("--index-rate", type=float, default=0.33, help="特征索引比率 (0-1)")
     parser.add_argument("--index-k", type=int, default=8, help="检索的最近特征数量")
+    parser.add_argument("--index-consonant-protect", type=float, default=0.66, help="保护原始辅音特征免受特征索引的掺入")
     
     # --- f0 提取 ---
     parser.add_argument("--f0-method", type=str, default="dio", help="f0 提取算法 (如 dio, harvest 等)")
@@ -93,6 +94,7 @@ def main() -> None:
             index_path=args.index_path,
             index_rate=args.index_rate,
             index_k=args.index_k,
+            index_consonant_protect=args.index_consonant_protect,
             f0extract_algorithm=args.f0_method,
             f0_up_semitone=args.pitch,
             f0_min=args.f0_min,

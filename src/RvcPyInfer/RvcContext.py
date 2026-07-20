@@ -57,6 +57,7 @@ class RvcContext:
             index_path: PathLike | None = None,
             index_rate: float = 0.33,
             index_k: int = 8, # 检索的最近特征数量
+            index_consonant_protect: float = 0.66, # 对辅音的特征进行保护，减少掺入的特征
 
             # -- f0 提取 --
             f0extract_algorithm: F0ExtractAlgorithm = "dio",
@@ -114,6 +115,7 @@ class RvcContext:
             index_path=index_path,
             index_rate=index_rate,
             index_k=index_k,
+            index_consonant_protect=index_consonant_protect,
             f0extract_algorithm=f0extract_algorithm,
             f0_up_semitone=f0_up_semitone,
             f0_min=f0_min,

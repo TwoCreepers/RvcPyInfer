@@ -30,6 +30,7 @@ class InferTask:
             index_path: Path | None = None,
             index_rate: float = 0.33,
             index_k: int = 8, # 检索的最近特征数量
+            index_consonant_protect: float = 0.66, # 对辅音的特征进行保护，减少掺入的特征
 
             # -- f0 提取 --
             f0extract_algorithm: F0ExtractAlgorithm,
@@ -64,6 +65,7 @@ class InferTask:
         self.index_path = index_path
         self.index_rate = index_rate
         self.index_k = index_k
+        self.index_consonant_protect = index_consonant_protect
         self.f0extract_algorithm = f0extract_algorithm
         self.f0_up_semitone = f0_up_semitone
         self.f0_min = f0_min
@@ -111,9 +113,15 @@ class InferTask:
 
         if self.index_rate > 1e-6 and self.index_path is not None and self.context._index_pool is not None:
             index = self.context._index_pool.get(self.index_path)
-            feats = index.apply_index(feats, self.index_rate, self.index_k)
-        
-        feats = np.repeat(feats, 2, axis=0) # 模型需要 160 帧移，但这里特征输出是 320 的
+            mix_feats = index.apply_index(feats, self.index_rate, self.index_k)
+            mix_feats = np.repeat(mix_feats, 2, axis=0)
+            if self.index_consonant_protect > 0.5 - 1e-6:
+                feats = np.repeat(feats, 2, axis=0)
+                masks = f0 < 1
+                mix_feats[masks] = mix_feats[masks] * (1 - self.index_consonant_protect) + feats[masks] * self.index_consonant_protect
+            feats = mix_feats
+        else:
+            feats = np.repeat(feats, 2, axis=0) # 模型需要 160 帧移，但这里特征输出是 320 的
 
         model = self.context._gen_pool.get(self.gen)
         res = model.infer(
