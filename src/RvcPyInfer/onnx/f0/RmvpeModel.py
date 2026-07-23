@@ -7,6 +7,7 @@ from ...provider.InferProviders import InferProviders
 from ...type_alist import Audio, PathLike
 from ..model_utils import build_model
 
+
 class RmvpeModel:
     def __init__(self, model: PathLike, providers: InferProviders) -> None:
         self.model = build_model(pathf(model), providers)

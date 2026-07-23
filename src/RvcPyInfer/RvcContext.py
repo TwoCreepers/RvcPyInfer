@@ -4,9 +4,9 @@ from pathlib import Path
 from .index.RvcFeatIndex import RvcFeatIndex
 from .InferTask import InferTask
 from .onnx.ContentVec import ContentVec
+from .onnx.f0.RmvpeModel import RmvpeModel
 from .onnx.ModelSimplePool import ModelSimplePool
 from .onnx.RvcGen import RvcGen
-from .onnx.f0.RmvpeModel import RmvpeModel
 from .path_utils import path
 from .provider.InferProviders import InferProviders
 from .provider.provider_type_alist import ProvidersLike

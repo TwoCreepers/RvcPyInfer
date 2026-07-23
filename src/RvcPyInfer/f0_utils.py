@@ -1,6 +1,6 @@
 import math
 from collections.abc import Callable
-from typing import overload, Literal
+from typing import Literal, overload
 
 import numpy as np
 import pyworld as pw
