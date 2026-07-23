@@ -112,7 +112,7 @@ task.run_and_save(
 它是一个 `Literal["dio", "harvest", "rmvpe"]`  
 - `dio`: 默认选择。精度在干声下足够看，很快
 - `harvest`: 精度相对 `dio` 更高，但只能使用 CPU 计算，导致速度甚至不如 `rmvpe`
-- `rmvpe`: 精度非常高，有一定抗和声能力，可以使用 `GPU` 加速，但需要单独下载 [`RMVPE.onnx`](https://huggingface.co/NaruseMioShirakana/MoeSS-SUBModel/blob/main/RMVPE.onnx)。**如果不怕麻烦的非常推荐。**
+- `rmvpe`: 精度非常高，有一定抗和声能力，可以使用 `GPU` 加速，但需要单独下载 [`RMVPE.onnx`](https://huggingface.co/NaruseMioShirakana/MoeSS-SUBModel/blob/main/RMVPE.onnx)。**如果不怕麻烦的话非常推荐。**
 
 为什么只有这些？我的 `pm`、`fcpe`、`crepe` 呢？  
 `pm` 是 `parselmouth` 库的传统算法方法，效果和 `pyworld` 不会差很多，并且额外引入不必要的 `parselmouth` 依赖。  
