@@ -18,7 +18,7 @@ from .provider.OvProviders import OvProviders
 from .provider.provider_type_alist import ProvidersLike
 from .provider.provider_utils import infer_providers
 from .RvcContext import RvcContext
-from .type_alist import Audio, AudioLike, F0ExtractAlgorithm, F0ExtractAlgorithmList, FileLike, PathLike
+from .type_alist import Audio, AudioLike, F0ExtractAlgorithm, FileLike, PathLike
 from .warn.InferEnvWarn import InferEnvWarn
 from .warn.InferModelWarn import InferModelWarn
 from .warn.InferWarn import InferWarn
@@ -26,7 +26,7 @@ from .warn.InferWarn import InferWarn
 # 用户肯定不会希望我的 __version__ 去污染 ta 的版本号
 
 __all__ = [
-    "Audio", "AudioLike", "PathLike", "FileLike", "F0ExtractAlgorithm", "F0ExtractAlgorithmList",
+    "Audio", "AudioLike", "PathLike", "FileLike", "F0ExtractAlgorithm",
     "InferEnvError", 
     "NotSupportedAlgorithmError",
     "InferWarn",

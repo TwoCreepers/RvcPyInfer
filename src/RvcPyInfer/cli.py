@@ -29,7 +29,9 @@ def main() -> None:
     parser.add_argument("--index-consonant-protect", type=float, default=0.66, help="保护原始辅音特征免受特征索引的掺入")
     
     # --- f0 提取 ---
-    parser.add_argument("--f0-method", type=str, default="dio", help="f0 提取算法 (如 dio, harvest 等)")
+    parser.add_argument("--f0-method", type=str, default="dio", help="f0 提取算法 (如 dio, harvest 等)", 
+                        choices=["dio", "harvest", "rmvpe"])
+    parser.add_argument("--f0-rmvpe-path", type=str, default=None, help="rmvpe 模型路径，如果使用 rmvpe 提取基频必须添加该选项")
     parser.add_argument("--pitch", type=float, default=0, help="升降调 (半音)")
     parser.add_argument("--f0-min", type=float, default=50, help="最低 f0")
     parser.add_argument("--f0-max", type=float, default=1100, help="最高 f0")
@@ -55,12 +57,19 @@ def main() -> None:
         print("错误: 输入音频数量与输出音频数量不一致！", file=sys.stderr)
         sys.exit(1)
 
+    if args.f0_method == "rmvpe" and args.f0_rmvpe_path is None:
+        print("错误: 使用了 rmvpe，但没有提供 rmvpe 模型路径")
+        sys.exit(1)
+
     try:
         # 1. 初始化推理 Provider 和 Context
         print(f"正在初始化推理环境，使用 Provider: {args.provider} ...")
         providers = InferProviders.parse(args.provider)
         print("Provider 解析结果:", providers)
-        context = RvcContext(providers=providers)
+        context = RvcContext(
+            providers=providers,
+            rmvpe=args.f0_rmvpe_path,
+        )
         
         # 2. 构建 InferTask
         print("正在构建推理任务...")

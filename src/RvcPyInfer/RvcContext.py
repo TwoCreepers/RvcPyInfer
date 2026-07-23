@@ -6,6 +6,7 @@ from .InferTask import InferTask
 from .onnx.ContentVec import ContentVec
 from .onnx.ModelSimplePool import ModelSimplePool
 from .onnx.RvcGen import RvcGen
+from .onnx.f0.RmvpeModel import RmvpeModel
 from .path_utils import path
 from .provider.InferProviders import InferProviders
 from .provider.provider_type_alist import ProvidersLike
@@ -16,12 +17,17 @@ from .warn.InferEnvWarn import InferEnvWarn
 
 # 请注意，RvcContext 并不是线程安全的
 class RvcContext:
+    _rmvpe: RmvpeModel | None
     def __init__(self,
                  providers: ProvidersLike = InferProviders.default(),
+                 rmvpe: PathLike | None = None,
                  vec_pool_permanent_size: int = 1,
                  gen_pool_permanent_size: int = 2,
                  index_pool_permanent_size: int = 2) -> None:
         self._providers = infer_providers(providers)
+
+        self._rmvpe_path = rmvpe
+        self._rmvpe = None
 
         self._vec_pool = ModelSimplePool[Path, ContentVec](
             lambda p: ContentVec(p.resolve(), self._providers),
@@ -41,7 +47,16 @@ class RvcContext:
         else:
             self._index_pool = None
 
+    def _get_rmvpe(self) -> RmvpeModel:
+        if self._rmvpe_path is None:
+            raise ValueError("未配置 rmvpe 模型路径，但尝试使用 rmvpe")
+        if self._rmvpe is None:
+            self._rmvpe = RmvpeModel(self._rmvpe_path, self._providers)
+        return self._rmvpe
+
     def clear(self) -> None:
+        self._rmvpe = None
+
         self._vec_pool.clear()
         self._gen_pool.clear()
 

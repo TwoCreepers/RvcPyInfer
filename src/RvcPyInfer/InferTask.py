@@ -8,12 +8,13 @@ from numpy.typing import NDArray
 
 from .audio.audio_utils import crossfade, reSR, rms_frame_match, split_by_max_len_with_overlap, split_by_silence
 from .f0_utils import apply_rise_tone, build_f0extract_func, f0_to_mel, median_filter, normalized_mel
-from .type_alist import Audio, AudioLike, F0ExtractAlgorithm, F0ExtractAlgorithmList, FileLike
+from .type_alist import Audio, AudioLike, F0ExtractAlgorithm, FileLike
 
 if TYPE_CHECKING:
     from .RvcContext import RvcContext
 
 class InferTask:
+    f0extract_algorithm: F0ExtractAlgorithm
     audios: list[Audio]
     def __init__(self, 
             # -- 必填 --
@@ -100,10 +101,12 @@ class InferTask:
         del self.audio_likes
 
     def core_chunk_infer(self, audio: Audio, f0extract_func: Callable[[Audio, int], NDArray[np.float32]]) -> Audio:
-        model = self.context._vec_pool.get(self.vec)
-        feats = model.infer(audio)
+        audio_16k = reSR(audio, target_sr=16000)
 
-        f0 = f0extract_func(audio, feats.shape[0] * 2) # 这里是没有批处理维度的
+        model = self.context._vec_pool.get(self.vec)
+        feats = model.infer(audio_16k)
+
+        f0 = f0extract_func(audio_16k, feats.shape[0] * 2) # 这里是没有批处理维度的
         if self.f0_median_filter_win_size >= 3:
             f0 = median_filter(f0, self.f0_median_filter_win_size)
         f0 = apply_rise_tone(f0, self.f0_up_semitone)
@@ -164,8 +167,10 @@ class InferTask:
         return res
 
     def gen_infer(self, callback: Callable[[int, Audio], None]) -> None:
-        assert self.f0extract_algorithm in F0ExtractAlgorithmList, f"{self.f0extract_algorithm} 不是受支持的 f0 提取算法"
-        func = build_f0extract_func(self.f0extract_algorithm, self.f0_min, self.f0_max) # pyright: ignore[reportArgumentType]
+        if self.f0extract_algorithm == "dio" or self.f0extract_algorithm == "harvest":
+            func = build_f0extract_func(self.f0extract_algorithm, self.f0_min, self.f0_max)
+        elif self.f0extract_algorithm == "rmvpe":
+            func = self.infer_rmvpe
         for i, audio in enumerate(self.audios):
             splited = split_by_silence(
                 audio,
@@ -225,3 +230,7 @@ class InferTask:
         self.gen_infer(
             callback=callback
         )
+
+    def infer_rmvpe(self, audio: Audio, p_len: int) -> NDArray[np.float32]:
+        model = self.context._get_rmvpe()
+        return model.infer(audio=audio, p_len=p_len)
