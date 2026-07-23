@@ -107,6 +107,16 @@ task.run_and_save(
 输出音频匹配输入音频 `rms` 包络的匹配率，通常来说：越大输出音频越接近输入音频的音量。  
 **推荐范围: [0.0, 1.0]**
 
+## f0 提取方法
+你应该已经注意到了 `build_task` 函数的 `f0extract_algorithm` 参数。  
+它是一个 `Literal["dio", "harvest", "rmvpe"]`  
+- `dio`: 默认选择。精度在干声下足够看，很快
+- `harvest`: 精度相对 `dio` 更高，但只能使用 CPU 计算，导致速度甚至不如 `rmvpe`
+- `rmvpe`: 精度非常高，有一定抗和声能力，可以使用 `GPU` 加速，但需要单独下载 [`RMVPE.onnx`](https://huggingface.co/NaruseMioShirakana/MoeSS-SUBModel/blob/main/RMVPE.onnx)。**如果不怕麻烦的非常推荐。**
+为什么只有这些？我的 `pm`、`fcpe`、`crepe` 呢？  
+`pm` 是 `parselmouth` 库的传统算法方法，效果和 `pyworld` 不会差很多，并且额外引入不必要的 `parselmouth` 依赖。  
+~~`fcpe` 和 `crepe` 是因为懒。~~  
+
 ## CLI
 我们已经预制了一些 `CLI` 在库中了，并随库一并打包。  
 以下是库内置的命令：  
