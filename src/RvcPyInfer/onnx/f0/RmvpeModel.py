@@ -21,6 +21,7 @@ class RmvpeModel:
             "threshold": np.array(threshold, dtype=np.float32)
         }
         f0 = self.model.infer(["f0"], inputs=input)["f0"]
+        # (1, frames)
         f0 = f0.squeeze(axis=0)
         f0 = f0.astype(np.float32)
         pad_len = p_len - len(f0)
