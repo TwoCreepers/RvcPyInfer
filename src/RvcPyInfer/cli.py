@@ -1,28 +1,9 @@
 import argparse
 import sys
 
-from .InferProviders import InferProviders
+from .provider.InferProviders import InferProviders
 from .RvcContext import RvcContext
 
-
-def str_to_provider(provider_str: str) -> InferProviders:
-    """将命令行字符串映射为 InferProviders 枚举"""
-    if provider_str == "default":
-        return InferProviders.default()
-    elif provider_str == "cuda":
-        return InferProviders.CUDA
-    elif provider_str == "dml":
-        return InferProviders.DML
-    elif provider_str == "ort_cpu":
-        return InferProviders.ORT_CPU
-    elif provider_str == "openvino_auto":
-        return InferProviders.OPENVINO_AUTO
-    elif provider_str == "openvino_cpu":
-        return InferProviders.OPENVINO_CPU
-    elif provider_str == "openvino_gpu":
-        return InferProviders.OPENVINO_GPU
-    else:
-        raise ValueError(f"未知的 Provider: {provider_str}")
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="RVC 语音转换命令行工具")
@@ -35,9 +16,7 @@ def main() -> None:
     parser.add_argument("-o", "--outputs", nargs="+", type=str, required=True, help="输出音频文件路径 (数量必须与输入一致)")
     
     # --- 推理引擎 ---
-    parser.add_argument("--provider", type=str, default="default", 
-                        choices=["default", "cuda", "dml", "ort_cpu", "openvino_auto", "openvino_cpu", "openvino_gpu"],
-                        help="推理后端 (默认自动检测)")
+    parser.add_argument("--provider", type=str, default="default", help="推理后端 (默认自动检测)")
     
     # --- 基础设置 ---
     parser.add_argument("--sid", type=int, default=0, help="说话人 ID")
@@ -79,7 +58,8 @@ def main() -> None:
     try:
         # 1. 初始化推理 Provider 和 Context
         print(f"正在初始化推理环境，使用 Provider: {args.provider} ...")
-        providers = str_to_provider(args.provider)
+        providers = InferProviders.parse(args.provider)
+        print("Provider 解析结果:", providers)
         context = RvcContext(providers=providers)
         
         # 2. 构建 InferTask

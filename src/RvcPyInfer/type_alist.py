@@ -9,5 +9,4 @@ type FileLike = PathLike | BinaryIO
 type Audio = tuple[NDArray[np.float32], int]
 type AudioLike = FileLike | Audio
 
-F0ExtractAlgorithmList = ["dio", "harvest"]
-type F0ExtractAlgorithm = Literal["dio", "harvest"]
+type F0ExtractAlgorithm = Literal["dio", "harvest", "rmvpe"]

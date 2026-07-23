@@ -4,7 +4,6 @@ from .audio import audio_utils
 from .cli import main as ModelInferCLI
 from .error.InferEnvError import InferEnvError
 from .error.NotSupportedAlgorithmError import NotSupportedAlgorithmError
-from .InferProviders import InferProviders
 from .InferTask import InferTask
 from .onnx.ContentVec import ContentVec
 from .onnx.model.cli import main as ModelExportToolCLI
@@ -13,6 +12,11 @@ from .onnx.model.Exporter import Exporter as OnnxExporter
 from .onnx.model.Optimizer import Optimizer as OnnxOptimizer
 from .onnx.ModelSimplePool import ModelSimplePool
 from .onnx.RvcGen import RvcGen
+from .provider.InferProviders import InferProviders
+from .provider.OrtProviders import OrtProviders
+from .provider.OvProviders import OvProviders
+from .provider.provider_type_alist import ProvidersLike
+from .provider.provider_utils import infer_providers
 from .RvcContext import RvcContext
 from .type_alist import Audio, AudioLike, F0ExtractAlgorithm, F0ExtractAlgorithmList, FileLike, PathLike
 from .warn.InferEnvWarn import InferEnvWarn
@@ -31,6 +35,10 @@ __all__ = [
     "f0_utils",
     "audio_utils",
     "InferProviders",
+    "OrtProviders",
+    "OvProviders",
+    "ProvidersLike",
+    "infer_providers",
     "RvcContext",
     "InferTask",
     "OnnxExporter",

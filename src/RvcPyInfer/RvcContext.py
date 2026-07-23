@@ -2,12 +2,14 @@ import warnings
 from pathlib import Path
 
 from .index.RvcFeatIndex import RvcFeatIndex
-from .InferProviders import InferProviders
 from .InferTask import InferTask
 from .onnx.ContentVec import ContentVec
 from .onnx.ModelSimplePool import ModelSimplePool
 from .onnx.RvcGen import RvcGen
 from .path_utils import path
+from .provider.InferProviders import InferProviders
+from .provider.provider_type_alist import ProvidersLike
+from .provider.provider_utils import infer_providers
 from .type_alist import AudioLike, F0ExtractAlgorithm, PathLike
 from .warn.InferEnvWarn import InferEnvWarn
 
@@ -15,11 +17,12 @@ from .warn.InferEnvWarn import InferEnvWarn
 # 请注意，RvcContext 并不是线程安全的
 class RvcContext:
     def __init__(self,
-                 providers: InferProviders = InferProviders.default(),
+                 providers: ProvidersLike = InferProviders.default(),
                  vec_pool_permanent_size: int = 1,
                  gen_pool_permanent_size: int = 2,
                  index_pool_permanent_size: int = 2) -> None:
-        self._providers = providers
+        self._providers = infer_providers(providers)
+
         self._vec_pool = ModelSimplePool[Path, ContentVec](
             lambda p: ContentVec(p.resolve(), self._providers),
             vec_pool_permanent_size
@@ -38,7 +41,7 @@ class RvcContext:
         else:
             self._index_pool = None
 
-    def clear_pool(self) -> None:
+    def clear(self) -> None:
         self._vec_pool.clear()
         self._gen_pool.clear()
 
