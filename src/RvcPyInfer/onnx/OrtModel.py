@@ -12,7 +12,7 @@ class OrtModel(InferModel):
     def __init__(self, model: Path, providers: OrtProviders) -> None:
         model = model.resolve()
         
-        import onnxruntime as ort
+        import onnxruntime as ort # pyright: ignore[reportMissingImports]
         self.session = ort.InferenceSession(
             str(model), providers=providers.to_providers()
         )
